@@ -54,7 +54,6 @@
 uint32_t getMicros();
 uint32_t getMillis();
 void addMillis();
-void resetTime();
 
 typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,POT}  INPUT;
 	
@@ -63,5 +62,14 @@ struct sndfamily{
 	unsigned char prog;
 	char name[50];
 };
+
+// arduino defines
+#define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
+#define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
+#define microsecondsToClockCycles(a) ( (a) * clockCyclesPerMicrosecond() )
+#define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
+#define MILLIS_INC (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
+#define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
+#define FRACT_MAX (1000 >> 3)
 
 #endif

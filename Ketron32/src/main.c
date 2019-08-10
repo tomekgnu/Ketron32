@@ -60,8 +60,8 @@ int main(void)
 	// << ADC
 	 
 	timerAttach(TIMER2OUTCOMPARE_INT,disk_timerproc);
-	timerAttach(TIMER1OUTCOMPAREA_INT,addMillis);
-	
+	//timerAttach(TIMER1OUTCOMPAREA_INT,addMillis);
+	timerAttach(TIMER0OVERFLOW_INT,addMillis);
 	
 	uartSetBaudRate(MIDI_BAUD_RATE);
 	uartSetRxHandler(rx_handler);
@@ -83,7 +83,7 @@ int main(void)
 	
 	// >> MIDI
 	memset(&mf,0,sizeof(struct MD_MIDIFile));
-	//initialise(&mf);
+	initialise(&mf);
 	setFilename(&mf,"Plik.mid");
 	
 	if(loadMIDIFile(&mf) != -1){
@@ -96,9 +96,9 @@ int main(void)
 	
 	mf._paused = FALSE;
 	mf._looping = FALSE;
-	mf._tickTime = 2083;
+	//mf._tickTime = 2083;
 	//synchTracks(&mf);
-	resetTime();
+	
 	while(!isEOF(&mf)){
 		getNextEvent(&mf);
 		if(!uartReceiveBufferIsEmpty()){
