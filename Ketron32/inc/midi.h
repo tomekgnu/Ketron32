@@ -2,6 +2,8 @@
 #define _MIDI_H
 
 #include "avrlibtypes.h"
+#include "MD_MIDIFile.h"
+
 // midi states
 #define MIDI_WAIT 1
 #define MIDI_READING 2
@@ -41,8 +43,11 @@
 unsigned char * getMidiEvent();
 BOOL readMidiMessage(unsigned char c,unsigned char *len);
 void sendMidiMessage(unsigned char num);
+void sendMidiBuffer(unsigned char *buf,unsigned char num);
 void sendProgramChange(unsigned char bank,unsigned char program);
-
+void midiFun(midi_event *ev);
+void metaFun(meta_event *ev);
+void sysexFun(sysex_event *ev);
 void midiInit(void);
 void midiPoll(unsigned char byte);
 unsigned char commandLen(unsigned char cmd);

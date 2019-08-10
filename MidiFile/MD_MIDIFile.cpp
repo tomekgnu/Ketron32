@@ -21,9 +21,8 @@
 */
 
 #include <string.h>
-#include "midifile.h"
-#include "midihelper.h"
-#include "avrlibtypes.h"
+#include "MD_MIDIFile.h"
+#include "MD_MIDIHelper.h"
 
 /**
  * \file
@@ -143,9 +142,9 @@ void MD_MIDIFile::calcTickTime(void)
   }
 }
 
-BOOL MD_MIDIFile::isEOF(void)
+bool MD_MIDIFile::isEOF(void)
 {
-  BOOL bEof = true;
+  bool bEof = true;
 
   // check if each track has finished
   for (uint8_t i=0; i<_trackCount && bEof; i++)
@@ -165,7 +164,7 @@ BOOL MD_MIDIFile::isEOF(void)
   return(bEof);
 }
 
-void MD_MIDIFile::pause(BOOL bMode)
+void MD_MIDIFile::pause(bool bMode)
 // Start pause when true and restart when false
 {
   _paused = bMode;
@@ -203,7 +202,7 @@ uint16_t MD_MIDIFile::tickClock(void)
   return(ticks);
 }
 
-BOOL MD_MIDIFile::getNextEvent(void)
+boolean MD_MIDIFile::getNextEvent(void)
 {
   uint16_t  ticks;
 
@@ -256,7 +255,7 @@ void MD_MIDIFile::processEvents(uint16_t ticks)
   }
 #else // EVENT_PRIORITY
   // process one event from each track round-robin style - EVENT PRIORITY
-  BOOL doneEvents;
+  bool doneEvents;
 
   // Limit n to be a sensible number of events in the loop counter
   for (n = 0; (n < 100) && (!doneEvents); n++)
@@ -265,7 +264,7 @@ void MD_MIDIFile::processEvents(uint16_t ticks)
 
     for (uint8_t i = 0; i < _trackCount; i++) // cycle through all
     {
-      BOOL b;
+      bool b;
 
       if (_format != 0) DUMPX("", i);
 

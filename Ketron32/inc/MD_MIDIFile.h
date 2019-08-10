@@ -343,7 +343,10 @@ http://www.stephenhobley.com/blog/2011/03/14/the-last-darned-midi-interface-ill-
 #ifndef _MDMIDIFILE_H
 #define _MDMIDIFILE_H
 
-#include "stdint.h"
+#include <stdint.h>
+#include "ff.h"
+#include "avrlibtypes.h"
+
 /**
  * \file
  * \brief Main header file for the MD_MIDIFile library
@@ -385,7 +388,7 @@ http://www.stephenhobley.com/blog/2011/03/14/the-last-darned-midi-interface-ill-
  no events are left to be processed (EVENT_PRIORITY). This macro definition enables
  the mode of operation implemented in getNextEvent().
  */
-#define TRACK_PRIORITY  1
+#define TRACK_PRIORITY  0
 
 // ------------- Configuration Section - END
 
@@ -400,6 +403,8 @@ http://www.stephenhobley.com/blog/2011/03/14/the-last-darned-midi-interface-ill-
 #define DUMP(s, v)    ///< Print a value (decimal)
 #define DUMPX(s, x)   ///< Print a value (hex)
 #endif // DUMP_DATA
+
+
 
 /**
  * MIDI event definition structure
@@ -447,47 +452,53 @@ typedef struct
 } meta_event;
 
 
-class MD_MIDIFile;
 
-/**
- * Object definition for a SMF MIDI track. 
- * This object is not invoked by user code.
- */
-class MD_MFTrack
-{
-public:
-  /** 
-   * Class Constructor
-   *
-   * Instantiate a new instance of the class.
-   *
-   * \return No return data.
-   */
-  MD_MFTrack(void);
-  
-  /** 
-   * Class Destructor
-   *
-   * Released allocated memory and does the necessary to clean up once the object is
-   * no longer required.
-   *
-   * \return No return data.
-   */
-  ~MD_MFTrack(void);
+struct MD_MFTrack{
+	
 
-  //--------------------------------------------------------------
-  /** \name Methods for track file data
-   * @{
-   */
-  /** 
-   * Get end of track status
-   *
-   * The method is used to test whether a track has reached the end.
-   * Once a track reached the end it stops being processed for MIDI events.
-   * 
-   * \return true if end of track has been reached.
-   */
-  bool getEndOfTrack(void);
+	uint8_t   _trackId;       ///< the id for this track
+	uint32_t  _length;        ///< length of track in bytes
+	uint32_t  _startOffset;   ///< start of the track in bytes from start of file
+	uint32_t  _currOffset;    ///< offset from start of the track for the next read of SD data
+	BOOL      _endOfTrack;    ///< true when we have reached end of track or we have encountered an undefined event
+	uint32_t  _elapsedTicks;  ///< the total number of elapsed ticks since last event
+	midi_event  _mev;         ///< data for MIDI callback function - persists between calls for run-on messages
+};
+
+struct MD_MIDIFile{
+	void (*_midiHandler)(midi_event *pev);   ///< callback into user code to process MIDI stream
+	void (*_sysexHandler)(sysex_event *pev); ///< callback into user code to process SYSEX stream
+	void (*_metaHandler)(const meta_event *pev); ///< callback into user code to process META stream
+	
+	FIL _fd;
+	char    _fileName[13];      ///< MIDI file name - should be 8.3 format
+
+	uint8_t _format;            ///< file format - 0: single track, 1: multiple track, 2: multiple song
+	uint8_t _trackCount;        ///< number of tracks in file
+
+	uint16_t  _ticksPerQuarterNote; ///< time base of file
+	uint32_t  _tickTime;            ///< calculated per tick based on other data for MIDI file
+	uint16_t  _lastTickError;       ///< error brought forward from last tick check
+	uint32_t  _lastTickCheckTime;   ///< the last time (microsec) an tick check was performed
+
+	BOOL    _syncAtStart;           ///< sync up at the start of all tracks
+	BOOL    _paused;                ///< if true we are currently paused
+	BOOL    _looping;               ///< if true we are currently looping
+
+	uint16_t  _tempo;               ///< tempo for this file in beats per minute
+	int16_t   _tempoDelta;          ///< tempo offset adjustment in beats per minute
+
+	uint8_t   _timeSignature[2];    ///< time signature [0] = numerator, [1] = denominator
+
+	// file handling
+	uint8_t   _selectSD;          ///< SDFat select line
+	
+	struct MD_MFTrack   _track[MIDI_MAX_TRACKS]; ///< the track data for this file
+};
+
+	void  parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t);  ///< process the event from the physical file
+	void resetTrack(struct MD_MFTrack *t);        ///< initialize class variables all in one place
+  BOOL getEndOfTrack(struct MD_MFTrack *t);
  
   /** 
    * Get the length of the track in bytes
@@ -497,7 +508,7 @@ public:
    * 
    * \return the total track length (bytes).
    */
-  uint32_t  getLength(void);
+  uint32_t  getLength(struct MD_MFTrack *t);
   /** @} */
 
   //--------------------------------------------------------------
@@ -526,8 +537,8 @@ public:
    * \param tickCount   the number of ticks since this method was last called for this track.
    * \return true if an event was found and processed.
    */
-  bool getNextEvent(MD_MIDIFile *mf, uint16_t tickCount);
-  
+  BOOL getNextEvent(struct MD_MIDIFile *mf);
+  BOOL getNextTrackEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t, uint16_t tickCount);
   /** 
    * Load the definition of a track
    *
@@ -541,7 +552,7 @@ public:
    * - 0 if the track header is not in the correct format 
    * - 1 if the track chunk is past the end of file
    */
-  int load(uint8_t trackId, MD_MIDIFile *mf);
+  int loadMIDIFile(struct MD_MIDIFile *mf);
   
   /** 
    * Reset the track to the start of the data in the file
@@ -550,8 +561,8 @@ public:
    *
    * \return No return data.
    */
-  void restart(void);
-  
+  void restart(struct MD_MIDIFile *m);
+  void restartTrack(struct MD_MFTrack *t);
   /** 
    * Reset the start time for this track
    *
@@ -559,7 +570,7 @@ public:
    *
    * \return No return data.
    */
-  void syncTime(void);
+  void syncTime(struct MD_MFTrack *t);
   /** @} */
 
   //--------------------------------------------------------------
@@ -576,21 +587,9 @@ public:
    *
    * \return No return data.
    */
-  void dump(void);
-  /** @} */
+  void dump(void);/** @} */ 
 
-protected:
-  void  parseEvent(MD_MIDIFile *mf);  ///< process the event from the physical file
-  void  reset(void);        ///< initialize class variables all in one place
 
-  uint8_t   _trackId;       ///< the id for this track
-  uint32_t  _length;        ///< length of track in bytes
-  uint32_t  _startOffset;   ///< start of the track in bytes from start of file
-  uint32_t  _currOffset;    ///< offset from start of the track for the next read of SD data
-  bool      _endOfTrack;    ///< true when we have reached end of track or we have encountered an undefined event
-  uint32_t  _elapsedTicks;  ///< the total number of elapsed ticks since last event
-  midi_event  _mev;         ///< data for MIDI callback function - persists between calls for run-on messages
-};
 
 /**
  * Core object for the MD_MIDIFile library
@@ -598,29 +597,6 @@ protected:
  * This is the class to handle a MIDI file, including all tracks, and is the only one 
  * available to user programs.
  */
-class MD_MIDIFile 
-{
-public:
-  friend class MD_MFTrack;
-
-  /** 
-   * Class Constructor
-   *
-   * Instantiate a new instance of the class.
-   *
-   * \return No return data.
-   */
-  MD_MIDIFile(void);
-  
-  /** 
-   * Class Destructor
-   *
-   * Released allocated memory and does the necessary to clean up once the object is
-   * no longer required.
-   *
-   * \return No return data.
-   */
-  ~MD_MIDIFile(void);
  
   /** 
    * Initialize the object
@@ -636,7 +612,7 @@ public:
    * \param psd Pointer to the SDFat object.
    * \return No return data.
    */
-  void begin(SdFat *psd);
+  void begin(FIL *psd);
 
   //--------------------------------------------------------------
   /** \name Methods for MIDI time base
@@ -650,7 +626,7 @@ public:
    * 
    * \return the tick time in microseconds
    */
-  inline uint32_t getTickTime(void) { return (_tickTime); }
+  inline uint32_t getTickTime(struct MD_MIDIFile *m) { return (m->_tickTime); }
 
   /** 
    * Get the overall tempo
@@ -660,7 +636,7 @@ public:
    * 
    * \return the tempo.
    */
-  inline uint16_t getTempo(void) { return(_tempo); }
+  inline uint16_t getTempo(struct MD_MIDIFile *m) { return(m->_tempo); }
 
   /** 
    * Get the tempo adjust offset
@@ -670,7 +646,7 @@ public:
    * 
    * \return the tempo.
    */
-  inline int16_t getTempoAdjust(void) { return(_tempoDelta); }
+  inline int16_t getTempoAdjust(struct MD_MIDIFile *m) { return(m->_tempoDelta); }
 
   /** 
    * Get the number of ticks per quarter note
@@ -680,7 +656,7 @@ public:
    * 
    * \return the number of TPQN.
    */
-  inline uint16_t getTicksPerQuarterNote(void) { return(_ticksPerQuarterNote); }
+  inline uint16_t getTicksPerQuarterNote(struct MD_MIDIFile *m) { return(m->_ticksPerQuarterNote); }
 
   /** 
    * Get the Time Signature
@@ -690,7 +666,7 @@ public:
    * 
    * \return the time signature (numerator in the top byte and the denominator in the lower byte).
    */
-  inline uint16_t getTimeSignature(void) { return((_timeSignature[0]<<8) + _timeSignature[1]); }
+  inline uint16_t getTimeSignature(struct MD_MIDIFile *m) { return((m->_timeSignature[0]<<8) + m->_timeSignature[1]); }
 
   /** 
    * Set the internal tick time
@@ -701,7 +677,7 @@ public:
    * \param m the number of microseconds per quarter note.
    * \return No return data.
    */
-  void setMicrosecondPerQuarterNote(uint32_t m);
+  void setMicrosecondPerQuarterNote(struct MD_MIDIFile *m,uint32_t mpqn);
 
   /** 
    * Set the overall tempo
@@ -714,7 +690,7 @@ public:
    * \param t the tempo required.
    * \return No return data.
    */
-  void setTempo(uint16_t t);
+  void setTempo(struct MD_MIDIFile *m,uint16_t t);
 
   /** 
    * Set the tempo adjustment offset 
@@ -729,7 +705,7 @@ public:
    * \param t the tempo adjustment required.
    * \return No return data.
    */
-  void setTempoAdjust(int16_t t);
+  void setTempoAdjust(struct MD_MIDIFile *m,int16_t t);
 
   /** 
    * Set number of ticks per quarter note (TPQN)
@@ -742,7 +718,7 @@ public:
    * \param ticks the number of ticks per quarter note.
    * \return No return data.
    */
-  void setTicksPerQuarterNote(uint16_t ticks);
+  void setTicksPerQuarterNote(struct MD_MIDIFile *m,uint16_t ticks);
 
   /** 
    * Set Time Signature for the SMF
@@ -756,7 +732,7 @@ public:
    * \param d denominator of the time signature.
    * \return No return data.
    */
-  void setTimeSignature(uint8_t n, uint8_t d);
+  void setTimeSignature(struct MD_MIDIFile *m,uint8_t n, uint8_t d);
   /** @} */
 
   //--------------------------------------------------------------
@@ -781,7 +757,7 @@ public:
    *
    * \return true if the SMF is at EOF, false otherwise.
    */
-  bool isEOF(void);
+  BOOL isEOF(struct MD_MIDIFile *m);
 
   /** 
    * Get the name of the SMF
@@ -790,7 +766,7 @@ public:
    * 
    * \return character pointer to the name string
    */
-  const char* getFilename(void) { return(_fileName); };
+  const char* getFilename(struct MD_MIDIFile *m);
 
   /** 
    * Set the name of the SMF
@@ -801,7 +777,7 @@ public:
    * \param aname pointer to a string with the file name.
    * \return No return data.
    */
-  void setFilename(const char* aname) { if (aname != nullptr) strcpy(_fileName, aname); }
+  void setFilename(struct MD_MIDIFile *m,const char* aname);
 
   /** 
    * Load the SMF
@@ -822,7 +798,7 @@ public:
    * - n0 = Track n track chunk not found
    * - n1 = Track n chunk size past end of file
    */
-  int load(void);
+ 
   /** @} */
 
   //--------------------------------------------------------------
@@ -842,7 +818,7 @@ public:
    * 
    * \return number [0..2] representing the format.
    */
-  inline uint8_t getFormat(void) { return(_format); };
+  inline uint8_t getFormat(struct MD_MIDIFile *m) { return(m->_format); };
 
   /** 
    * Get the number of tracks in the file
@@ -854,7 +830,7 @@ public:
    * 
    * \return the number of tracks in the file
    */
-  inline uint8_t getTrackCount(void) { return (_trackCount); };
+  inline uint8_t getTrackCount(struct MD_MIDIFile *m) { return (m->_trackCount); };
   /** @} */
 
   //--------------------------------------------------------------
@@ -873,7 +849,7 @@ public:
    * \param bMode Set true to enable mode, false to disable.
    * \return No return data.
    */
-  inline void looping(bool bMode) { _looping = bMode; }
+  inline void looping(struct MD_MIDIFile *m, BOOL bMode) { m->_looping = bMode; }
 
   /** 
    * Pause or un-pause SMF playback
@@ -885,7 +861,7 @@ public:
    *
    * \return No return data.
    */
-  void pause(bool bMode);
+  void pauseMIDIFile(struct MD_MIDIFile *m,BOOL bMode);
 
   /** 
    * Force the SMF to be restarted
@@ -895,7 +871,7 @@ public:
    *
    * \return No return data.
    */
-  void restart(void);
+  
   /** @} */
 
   //--------------------------------------------------------------
@@ -913,7 +889,7 @@ public:
    * 
    * \return true if a 'tick' has passed since the last call.
    */
-  boolean getNextEvent(void);
+  
 
  /** 
    * Read and process the next event from the SMF
@@ -937,7 +913,7 @@ public:
    * \param ticks the number of ticks since the last call to this method.
    * \return No return data
    */
-  void processEvents(uint16_t ticks);
+  void processEvents(struct MD_MIDIFile *m,uint16_t ticks);
 
  /** 
    * Set the MIDI callback function
@@ -953,7 +929,7 @@ public:
    * \param mh  the address of the function to be called from the library.
    * \return No return data
    */
-  inline void setMidiHandler(void (*mh)(midi_event *pev)) { _midiHandler = mh; };
+  void setMidiHandler(struct MD_MIDIFile *m,void (*mh)(midi_event *pev));
 
   /** 
    * Set the SYSEX callback function
@@ -969,7 +945,7 @@ public:
    * \param sh  the address of the function to be called from the library.
    * \return No return data
    */
-  inline void setSysexHandler(void (*sh)(sysex_event *pev)) { _sysexHandler = sh; };
+  void setSysexHandler(struct MD_MIDIFile *m,void (*sh)(sysex_event *pev));
 
   /** 
    * Set the META callback function
@@ -985,7 +961,7 @@ public:
    * \param mh  the address of the function to be called from the library.
    * \return No return data
    */
-  inline void setMetaHandler(void (*mh)(const meta_event *mev)) { _metaHandler = mh; };
+  void setMetaHandler(struct MD_MIDIFile *m,void (*mh)(const meta_event *mev));
   /** @} */
 
   //--------------------------------------------------------------
@@ -1003,40 +979,15 @@ public:
   void dump(void);
   /** @} */
 
-protected:
-  void    calcTickTime(void); ///< called internally to update the tick time when parameters change
-  void    initialise(void);   ///< initialize class variables all in one place
-  void    synchTracks(void);  ///< synchronize the start of all tracks
-  uint16_t tickClock(void);   ///< work out the number of ticks since the last event check
 
-  void (*_midiHandler)(midi_event *pev);   ///< callback into user code to process MIDI stream
-  void (*_sysexHandler)(sysex_event *pev); ///< callback into user code to process SYSEX stream
-  void (*_metaHandler)(const meta_event *pev); ///< callback into user code to process META stream
+  void    calcTickTime(struct MD_MIDIFile *m); ///< called internally to update the tick time when parameters change
+  void    initialise(struct MD_MIDIFile *m);   ///< initialize class variables all in one place
+  void    synchTracks(struct MD_MIDIFile *m);  ///< synchronize the start of all tracks
+  uint16_t tickClock(struct MD_MIDIFile *m);   ///< work out the number of ticks since the last event check
 
-  char    _fileName[13];      ///< MIDI file name - should be 8.3 format
+  int loadTrack(struct MD_MFTrack *t,uint8_t trackId, struct MD_MIDIFile *mf);
 
-  uint8_t _format;            ///< file format - 0: single track, 1: multiple track, 2: multiple song
-  uint8_t _trackCount;        ///< number of tracks in file
 
-  uint16_t  _ticksPerQuarterNote; ///< time base of file
-  uint32_t  _tickTime;            ///< calculated per tick based on other data for MIDI file
-  uint16_t  _lastTickError;       ///< error brought forward from last tick check
-  uint32_t  _lastTickCheckTime;   ///< the last time (microsec) an tick check was performed
-
-  bool    _syncAtStart;           ///< sync up at the start of all tracks
-  bool    _paused;                ///< if true we are currently paused
-  bool    _looping;               ///< if true we are currently looping
-
-  uint16_t  _tempo;               ///< tempo for this file in beats per minute
-  int16_t   _tempoDelta;          ///< tempo offset adjustment in beats per minute
-
-  uint8_t   _timeSignature[2];    ///< time signature [0] = numerator, [1] = denominator
-
-  // file handling
-  uint8_t   _selectSD;          ///< SDFat select line
-  SdFat     *_sd;               ///< SDFat library descriptor supplied by calling program
-  SdFile    _fd;                ///< SDFat file descriptor
-  MD_MFTrack   _track[MIDI_MAX_TRACKS]; ///< the track data for this file
-};
+  
 
 #endif /* _MDMIDIFILE_H */

@@ -21,6 +21,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <stdint.h>
 // global AVRLIB defines
 #include "avrlibdefs.h"
 // global AVRLIB types definitions
@@ -46,6 +47,14 @@
 #define SW1		PB1
 #define SW2		PB2
 #define SW3		PB3 
+
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+
+uint32_t getMicros();
+uint32_t getMillis();
+void addMillis();
+void resetTime();
 
 typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,POT}  INPUT;
 	

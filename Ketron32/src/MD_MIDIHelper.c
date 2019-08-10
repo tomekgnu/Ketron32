@@ -20,36 +20,40 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <string.h>
-#include "midifile.h"
-#include "midihelper.h"
+#include "MD_MIDIFile.h"
+#include "MD_MIDIHelper.h"
+#include "ff.h"
 
 /**
  * \file
  * \brief Main file for helper functions implementation
  */
 
-uint32_t readMultiByte(SdFile *f, uint8_t nLen)
+uint32_t readMultiByte(FIL *f, uint8_t nLen)
 // read fixed length parameter from input
 {
   uint32_t  value = 0L;
-  
+  uint8_t c;
+  UINT d;
   for (uint8_t i=0; i<nLen; i++)
   {
-    value = (value << 8) + f->read();
+    f_read(f,&c,1,&d);
+	value = (value << 8) + c;
   }
   
   return(value);
 }
 
-uint32_t readVarLen(SdFile *f)
+uint32_t readVarLen(FIL *f)
 // read variable length parameter from input
 {
   uint32_t  value = 0;
-  char      c;
-  
+  uint8_t      c;
+  UINT d;
+  FRESULT res;
   do
   {
-    c = f->read();
+    res = f_read(f,&c,1,&d);
     value = (value << 7) + (c & 0x7f);
   }  while (c & 0x80);
   

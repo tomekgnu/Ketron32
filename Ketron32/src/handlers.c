@@ -5,17 +5,24 @@
  *  Author: Tomek
  */ 
 #include <avr/io.h>
+#include <stdint.h>
 #include "uart.h"
 #include "buffer.h"
 #include "global.h"
 #include "avr/io.h"
 #include "midi.h"
 #include "avrlibtypes.h"
+
 #include "ff.h"
 #include "a2d.h"
+#include "timer.h"
 
 extern cBuffer uartRxBuffer;
 extern volatile unsigned char adcValue;
+
+static volatile uint32_t _micros = 0;
+static volatile uint32_t _millis = 0;		// counter for microseconds
+static volatile uint32_t _seconds = 0;
 
 void rx_handler(unsigned char byte){
 	
@@ -32,7 +39,14 @@ DWORD get_fattime(){
 
 void configTimers()
 {
-		
+	 // Set up timer 1 to overflow once a millisecond
+	 // WGM = 4, OCRA = 2000
+	 TCCR1B |= (1 << WGM12) | ( 1 << CS11); // WGM=4, Clear on Timer Match | Set prescaler to 1/8th
+	 OCR1A = 2000; // Overflow once per 1000 microseconds
+	 // Enable interrupt
+	 TIMSK |= (1 << OCIE1A);
+	
+	// timer2: interrupt every 10ms	
 	OCR2 = 156;
 	TCCR2 |= (1 << WGM21); //Wlaczenie trybu CTC (Clear on compare match)
 	TIMSK |= (1 << OCIE2); //Wystapienie przerwania gdy zliczy do podanej wartosci
@@ -88,4 +102,35 @@ INPUT readInputs(unsigned char *pot,unsigned char but[]){
 	
 	return NONE;
 	
+}
+
+void resetTime(){
+	uint8_t oldSREG = SREG;
+	cli();
+	TCNT1 = 0;
+	SREG = oldSREG;
+}
+
+uint32_t getMicros(){	
+	uint8_t oldSREG = SREG, t;
+	cli();
+	t = TCNT1;
+	SREG = oldSREG;
+	
+	
+	return 1000 * _millis + (t >> 1);
+}
+
+uint32_t getMillis(){	
+	
+	return _millis;	
+	
+}
+
+void addMillis(){
+	
+	unsigned char statusReg = SREG; // Save the status register
+	++_millis; // Add one millisecond, cause we interrupt once per millisecond
+	_seconds += (0 == (_millis % 1000))?1:0; // Increase seconds each thousand milliseconds
+	SREG = statusReg; // Restore the status register
 }

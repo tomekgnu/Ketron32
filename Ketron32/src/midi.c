@@ -6,9 +6,11 @@
 //#include <avr/io.h>
 //#include <avr/pgmspace.h>
 
+#include <util/delay.h>
 #include <string.h>
 #include "midi.h"
 #include "uart.h"
+#include "midi.h"
 
 // midi state machine
 unsigned char midiState;
@@ -138,6 +140,12 @@ void sendMidiMessage(unsigned char num){
 	
 }
 
+void sendMidiBuffer(unsigned char *buf,unsigned char num){
+	unsigned char i;
+	for(i = 0; i < num; i++)
+	uartSendByte(buf[i]);
+}
+
 void sendProgramChange(unsigned char bank,unsigned char program){
 	midiEvent[0] = MIDI_CONTROL_CHANGE;
 	midiEvent[1] = 0;			// MSB
@@ -182,8 +190,17 @@ unsigned char commandLen(unsigned char cmd)
 	return 0;
 }
 
+void metaFun(meta_event *ev){
+	
+}
 
+void sysexFun(sysex_event *ev){
+	
+}
 
+void midiFun(midi_event *ev){
+	sendMidiBuffer(ev->data,ev->size);
+}
 
 
 

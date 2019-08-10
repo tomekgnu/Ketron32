@@ -14,13 +14,13 @@ src\lcd.c
 
 src\main.c
 
+src\MD_MIDIFile.c
+
+src\MD_MIDIHelper.c
+
+src\MD_MIDITrack.c
+
 src\midi.c
-
-src\midifile.c
-
-src\midihelper.c
-
-src\miditrack.c
 
 src\mmc.c
 

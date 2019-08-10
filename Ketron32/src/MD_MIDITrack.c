@@ -20,76 +20,70 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <string.h>
-#include "midifile.h"
-#include "midihelper.h"
-#include "avrlibtypes.h"
+#include "MD_MIDIFile.h"
+#include "MD_MIDIHelper.h"
+#include "ff.h"
+#include "global.h"
+
 /**
  * \file
  * \brief Main file for the MFTrack class implementation
  */
 
-void MD_MFTrack::reset(void)
+void resetTrack(struct MD_MFTrack *t)
 {
-  _length = 0;        // length of track in bytes
-  _startOffset = 0;   // start of the track in bytes from start of file
-  restart();
-  _trackId = 255;
+  t->_length = 0;        // length of track in bytes
+  t->_startOffset = 0;   // start of the track in bytes from start of file
+  restartTrack(t);
+  t->_trackId = 255;
 }
 
-MD_MFTrack::MD_MFTrack(void)
+
+void closeTrack(struct MD_MFTrack *t)
 {
-  reset();
+  resetTrack(t);
 }
 
-MD_MFTrack::~MD_MFTrack()
-{
-}
-
-void MD_MFTrack::close(void)
-{
-  reset();
-}
-
-uint32_t MD_MFTrack::getLength(void)
+uint32_t getLength(struct MD_MFTrack *t)
 // size of track in bytes
 {
-  return _length;
+  return t->_length;
 }
 
-BOOL MD_MFTrack::getEndOfTrack(void)
+BOOL getEndOfTrack(struct MD_MFTrack *t)
 // true if end of track has been reached
 {
-  return _endOfTrack;
+  return t->_endOfTrack;
 }
 
-void MD_MFTrack::syncTime(void)
+void syncTime(struct MD_MFTrack *t)
 {
-  _elapsedTicks = 0;
+  t->_elapsedTicks = 0;
 }
 
-void MD_MFTrack::restart(void)
+void restartTrack(struct MD_MFTrack *t)
 // Start playing the track from the beginning again
 {
-  _currOffset = 0;
-  _endOfTrack = false;
-  _elapsedTicks = 0;
+  t->_currOffset = 0;
+  t->_endOfTrack = FALSE;
+  t->_elapsedTicks = 0;
 }
 
-BOOL MD_MFTrack::getNextEvent(MD_MIDIFile *mf, uint16_t tickCount)
+BOOL getNextTrackEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t, uint16_t tickCount)
 // track_event = <time:v> + [<midi_event> | <meta_event> | <sysex_event>]
 {
   uint32_t deltaT;
 
   // is there anything to process?
-  if (_endOfTrack)
-    return(false);
+  if (t->_endOfTrack)
+    return(FALSE);
 
   // move the file pointer to where we left off
-  mf->_fd.seekSet(_startOffset+_currOffset);
+  f_lseek(&mf->_fd,t->_startOffset+t->_currOffset);  
 
   // Work out new total elapsed ticks - include the overshoot from
   // last event.
-  _elapsedTicks += tickCount;
+  t->_elapsedTicks += tickCount;
 
   // Get the DeltaT from the file in order to see if enough ticks have
   // passed for the event to be active.
@@ -97,38 +91,38 @@ BOOL MD_MFTrack::getNextEvent(MD_MIDIFile *mf, uint16_t tickCount)
 
   // If not enough ticks, just return without saving the file pointer and 
   // we will go back to the same spot next time.
-  if (_elapsedTicks < deltaT)
-    return(false);
+  if (t->_elapsedTicks < deltaT)
+    return(FALSE);
 
   // Adjust the total elapsed time to the error against actual DeltaT to avoid 
   // accumulation of errors, as we only check for _elapsedTicks being >= ticks,
   // giving positive biased errors every time.
-  _elapsedTicks -= deltaT;
+  t->_elapsedTicks -= deltaT;
 
   DUMP("\ndT: ", deltaT);
   DUMP(" + ", _elapsedTicks);
   DUMPS("\t");
 
-  parseEvent(mf);
+  parseEvent(mf,t);
 
   // remember the offset for next time
-  _currOffset = mf->_fd.curPosition() - _startOffset;
+  t->_currOffset = mf->_fd.fptr - t->_startOffset;
 
   // catch end of track when there is no META event  
-  _endOfTrack = _endOfTrack || (_currOffset >= _length);
-  if (_endOfTrack) DUMPS(" - OUT OF TRACK");
+  t->_endOfTrack = t->_endOfTrack || (t->_currOffset >= t->_length);
+  if (t->_endOfTrack) DUMPS(" - OUT OF TRACK");
 
-  return(true);
+  return(TRUE);
 }
 
-void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
+void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
 // process the event from the physical file
 {
   uint8_t eType;
   uint32_t eLen, mLen;
-
+  UINT bRead;
   // now we have to process this event
-  eType = mf->_fd.read();
+  f_read(&mf->_fd,&eType,1,&bRead);
 
   switch (eType)
   {
@@ -139,35 +133,35 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
     // Any valid Channel MIDI message can be included in a MIDI file.
   case 0x80 ... 0xBf: // MIDI message with 2 parameters
   case 0xe0 ... 0xef:
-    _mev.size = 3;
-    _mev.data[0] = eType;
-    _mev.channel = _mev.data[0] & 0xf;  // mask off the channel
-    _mev.data[0] = _mev.data[0] & 0xf0; // just the command byte
-    _mev.data[1] = mf->_fd.read();
-    _mev.data[2] = mf->_fd.read();
+    t->_mev.size = 3;
+    t->_mev.data[0] = eType;
+    t->_mev.channel = t->_mev.data[0] & 0xf;  // mask off the channel
+    t->_mev.data[0] = t->_mev.data[0] & 0xf0; // just the command byte
+    f_read(&mf->_fd,&t->_mev.data[1],1,&bRead);
+    f_read(&mf->_fd,&t->_mev.data[2],1,&bRead);
     DUMP("[MID2] Ch: ", _mev.channel);
     DUMPX(" Data: ", _mev.data[0]);
     DUMPX(" ", _mev.data[1]);
-    DUMPX(" ", _mev.data[2]);
+    DUMPX(" ", _mev.data[2]);	
 #if !DUMP_DATA
-    if (mf->_midiHandler != nullptr)
-      (mf->_midiHandler)(&_mev);
+    if (mf->_midiHandler != NULL)
+      (mf->_midiHandler)(&t->_mev);
 #endif // !DUMP_DATA
   break;
 
   case 0xc0 ... 0xdf: // MIDI message with 1 parameter
-    _mev.size = 2;
-    _mev.data[0] = eType;
-    _mev.channel = _mev.data[0] & 0xf;  // mask off the channel
-    _mev.data[0] = _mev.data[0] & 0xf0; // just the command byte
-    _mev.data[1] = mf->_fd.read();
+    t->_mev.size = 2;
+    t->_mev.data[0] = eType;
+    t->_mev.channel = t->_mev.data[0] & 0xf;  // mask off the channel
+    t->_mev.data[0] = t->_mev.data[0] & 0xf0; // just the command byte
+    f_read(&mf->_fd,&t->_mev.data[1],1,&bRead);
     DUMP("[MID1] Ch: ", _mev.channel);
     DUMPX(" Data: ", _mev.data[0]);
     DUMPX(" ", _mev.data[1]);
 
 #if !DUMP_DATA
-    if (mf->_midiHandler != nullptr)
-      (mf->_midiHandler)(&_mev);
+    if (mf->_midiHandler != NULL)
+      (mf->_midiHandler)(&t->_mev);
 #endif
   break;
 
@@ -182,22 +176,22 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
     // and data[0] (for the MIDI command). 
     // Hence start saving the data at byte data[1] with the byte we have just read (eType) 
     // and use the size member to determine how large the message is (ie, same as before).
-    _mev.data[1] = eType;
-    for (uint8_t i = 2; i < _mev.size; i++)
+    t->_mev.data[1] = eType;
+    for (uint8_t i = 2; i < t->_mev.size; i++)
     {
-      _mev.data[i] = mf->_fd.read();  // next byte
+      f_read(&mf->_fd,&t->_mev.data[1],1,&bRead);  // next byte
     } 
 
     DUMP("[MID+] Ch: ", _mev.channel);
     DUMPS(" Data:");
-    for (uint8_t i = 0; i<_mev.size; i++)
+    for (uint8_t i = 0; i<t->_mev.size; i++)
     {
-      DUMPX(" ", _mev.data[i]);
+      DUMPX(" ", t->_mev.data[i]);
     }
 
 #if !DUMP_DATA
-    if (mf->_midiHandler != nullptr)
-      (mf->_midiHandler)(&_mev);
+    if (mf->_midiHandler != NULL)
+      (mf->_midiHandler)(&t->_mev);
 #endif
   }
   break;
@@ -210,7 +204,7 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
     uint16_t index = 0;
 
     // collect all the bytes until the 0xf7 - boundaries are included in the message
-    sev.track = _trackId;
+    sev.track = t->_trackId;
     mLen = readVarLen(&mf->_fd);
     sev.size = mLen;
     if (eType==0xF0)       // add space for 0xF0
@@ -222,9 +216,9 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
     // The length parameter includes the 0xF7 but not the start boundary.
     // However, it may be bigger than our buffer will allow us to store.
     for (uint16_t i=index; i<minLen; ++i)
-      sev.data[i] = mf->_fd.read();
+      f_read(&mf->_fd,&sev.data[i],1,&bRead);
     if (sev.size>minLen)
-      mf->_fd.seekCur(sev.size-minLen);
+      f_lseek(&mf->_fd,f_tell(&mf->_fd) + (sev.size-minLen));
 
 #if DUMP_DATA
     DUMPS("[SYSX] Data:");
@@ -235,7 +229,7 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
     if (sev.size>minLen)
       DUMPS("...");
 #else
-    if (mf->_sysexHandler != nullptr)
+    if (mf->_sysexHandler != NULL)
       (mf->_sysexHandler)(&sev);
 #endif
   }
@@ -246,10 +240,11 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
   {
     meta_event mev;
 
-    eType = mf->_fd.read();
+    //eType = 
+	f_read(&mf->_fd,&eType,1,&bRead);
     mLen =  readVarLen(&mf->_fd);
 
-    mev.track = _trackId;
+    mev.track = t->_trackId;
     mev.size = mLen;
     mev.type = eType;
 
@@ -261,7 +256,7 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
     {
       case 0x2f:  // End of track
       {
-        _endOfTrack = true;
+        t->_endOfTrack = TRUE;
         DUMPS("END OF TRACK");
       }
       break;
@@ -270,41 +265,43 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
       {
         uint32_t value = readMultiByte(&mf->_fd, MB_TRYTE);
         
-        mf->setMicrosecondPerQuarterNote(value);
+        setMicrosecondPerQuarterNote(mf,value);
         
         mev.data[0] = (value >> 16) & 0xFF;
         mev.data[1] = (value >> 8) & 0xFF;
         mev.data[2] = value & 0xFF;
         
-        DUMP("SET TEMPO to ", mf->getTickTime());
-        DUMP(" us/tick or ", mf->getTempo());
+        DUMP("SET TEMPO to ", getTickTime(mf));
+        DUMP(" us/tick or ", getTempo(mf));
         DUMPS(" beats/min");
       }
       break;
 
       case 0x58:  // time signature
       {
-        uint8_t n = mf->_fd.read();
-        uint8_t d = mf->_fd.read();
+        uint8_t n,d;
+		f_read(&mf->_fd,&n,1,&bRead);
+        f_read(&mf->_fd,&d,1,&bRead);
         
-        mf->setTimeSignature(n, 1 << d);  // denominator is 2^n
-        mf->_fd.seekCur(mLen - 2);
+        setTimeSignature(mf,n, 1 << d);  // denominator is 2^n
+        f_lseek(&mf->_fd,f_tell(&mf->_fd) + (mLen - 2));
 
         mev.data[0] = n;
         mev.data[1] = d;
         mev.data[2] = 0;
         mev.data[3] = 0;
 
-        DUMP("SET TIME SIGNATURE to ", mf->getTimeSignature() >> 8);
-        DUMP("/", mf->getTimeSignature() & 0xf);
+        DUMP("SET TIME SIGNATURE to ", getTimeSignature(mf) >> 8);
+        DUMP("/", getTimeSignature(mf) & 0xf);
       }
       break;
 
       case 0x59:  // Key Signature
       {
-        DUMPS("KEY SIGNATURE");
-        int8_t sf = mf->_fd.read();
-        uint8_t mi = mf->_fd.read();
+        int8_t sf,mi;
+		DUMPS("KEY SIGNATURE");
+        f_read(&mf->_fd,&sf,1,&bRead);
+        f_read(&mf->_fd,&mi,1,&bRead);
         const char* aaa[] = {"Cb", "Gb", "Db", "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#"};
 
         if (sf >= -7 && sf <= 7) 
@@ -417,16 +414,16 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
         uint8_t minLen = min(ARRAY_SIZE(mev.data), mLen);
         
         for (uint8_t i = 0; i < minLen; ++i)
-          mev.data[i] = mf->_fd.read(); // read next
-
+          f_read(&mf->_fd,&mev.data[i],1,&bRead); // read next
+		 		  
         mev.chars[minLen] = '\0'; // in case it is a string
         if (mLen > ARRAY_SIZE(mev.data))
-          mf->_fd.seekCur(mLen-ARRAY_SIZE(mev.data));
+          f_lseek(&mf->_fd,f_tell(&mf->_fd) + (mLen-ARRAY_SIZE(mev.data)));
   //    DUMPS("IGNORED");
       }
       break;
     }
-    if (mf->_metaHandler != nullptr)
+    if (mf->_metaHandler != NULL)
       (mf->_metaHandler)(&mev);
   }
   break;
@@ -434,27 +431,27 @@ void MD_MFTrack::parseEvent(MD_MIDIFile *mf)
 // ---------------------------- UNKNOWN
   default:
     // stop playing this track as we cannot identify the eType
-    _endOfTrack = true;
+    t->_endOfTrack = TRUE;
     DUMPX("[UKNOWN 0x", eType);
     DUMPS("] Track aborted");
     break;
   }
 }
 
-int MD_MFTrack::load(uint8_t trackId, MD_MIDIFile *mf)
+int loadTrack(struct MD_MFTrack *t,uint8_t trackId, struct MD_MIDIFile *mf)
 {
   uint32_t  dat32;
   uint16_t  dat16;
 
   // save the trackid for use later
-  _trackId = _mev.track = trackId;
+  t->_trackId = t->_mev.track = trackId;
   
   // Read the Track header
   // track_chunk = "MTrk" + <length:4> + <track_event> [+ <track_event> ...]
   {
     char    h[MTRK_HDR_SIZE+1]; // Header characters + nul
   
-    mf->_fd.fgets(h, MTRK_HDR_SIZE+1);
+    f_read(&mf->_fd,h,MTRK_HDR_SIZE,&dat32);
     h[MTRK_HDR_SIZE] = '\0';
 
     if (strcmp(h, MTRK_HDR) != 0)
@@ -464,28 +461,28 @@ int MD_MFTrack::load(uint8_t trackId, MD_MIDIFile *mf)
   // Row read track chunk size and in bytes. This is not really necessary 
   // since the track MUST end with an end of track meta event.
   dat32 = readMultiByte(&mf->_fd, MB_LONG);
-  _length = dat32;
+  t->_length = dat32;
 
   // save where we are in the file as this is the start of offset for this track
-  _startOffset = mf->_fd.curPosition();
-  _currOffset = 0;
+  t->_startOffset = mf->_fd.fptr;
+  t->_currOffset = 0;
 
   // Advance the file pointer to the start of the next track;
-  if (mf->_fd.seekSet(_startOffset+_length) == -1)
+  if (f_lseek(&mf->_fd,(t->_startOffset+t->_length)) != FR_OK)
     return(1);
 
   return(-1);
 }
 
 #if DUMP_DATA
-void MD_MFTrack::dump(void)
+void dumpTrack(struct MD_MFTrack *t)
 {
-  DUMP("\n[Track ", _trackId);
+  DUMP("\n[Track ", t->_trackId);
   DUMPS(" Header]");
-  DUMP("\nLength:\t\t\t", _length);
-  DUMP("\nFile Location:\t\t", _startOffset);
-  DUMP("\nEnd of Track:\t\t", _endOfTrack);
-  DUMP("\nCurrent buffer offset:\t", _currOffset);
+  DUMP("\nLength:\t\t\t", t->_length);
+  DUMP("\nFile Location:\t\t", t->_startOffset);
+  DUMP("\nEnd of Track:\t\t", t->_endOfTrack);
+  DUMP("\nCurrent buffer offset:\t", t->_currOffset);
 }
 #endif // DUMP_DATA
 
