@@ -199,9 +199,6 @@ void sysexFun(sysex_event *ev){
 }
 
 void midiFun(midi_event *ev){
+	ev->data[0] = ev->data[0] | ev->channel;
 	sendMidiBuffer(ev->data,ev->size);
 }
-
-
-
-

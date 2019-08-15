@@ -26,30 +26,29 @@
 #include "MD_MIDIFile.h"
 
 FATFS Fatfs;
+static char files[MAX_FILES][9];
 
 int main(void)
 {
     unsigned char byteValue = 0;
-	struct MD_MIDIFile mf;
-	char indstr[17];
-    unsigned int ind = 0;
-    unsigned char numOfBytes = 0;
-    unsigned char pot = 0;
-    unsigned char buttons[4];
-    INPUT input = NONE;
+	unsigned char idx = 0;
+    unsigned char num = 0;
+    unsigned char currentMode = SOUND_SEL,currentAction = NONE;
+	INPUT input = NONE;
     struct sndfamily fam;
     FIL file;
     FILINFO finfo;
     DIR directory;
     FRESULT res;    
 	
-	DDRA |= (1 << PA1);		// remove
-			
+	//DDRA |= (1 << PA1);		// remove
+	
 	configTimers();	
 	lcdInit();	
 	uartInit();
 	midiInit();	
 	spiInit();	
+	setInputs();
 	
 	// >> ADC
 	a2dInit();
@@ -74,94 +73,77 @@ int main(void)
 	else
 		lcdPrintData("Mount OK",8);
 	lcdGotoXY(0,1);		
-	
-	if((res = f_open(&file,"Plik.mid",FA_READ)) != FR_OK)
+	/*
+	res = disk_initialize(0);		
+	if((res = f_open(&file,"Piano.fam",FA_READ)) != FR_OK)
 		lcdPrintData("Open failed",11);
-	else
+	else{
 		lcdPrintData("Open OK",7);		
-	f_close(&file);
-	
-	// >> MIDI
-	memset(&mf,0,sizeof(struct MD_MIDIFile));
-	initialise(&mf);
-	setFilename(&mf,"Plik.mid");
-	
-	if(loadMIDIFile(&mf) != -1){
-		lcdPrintData("Open failed",11);
-		while(1){}
+		f_close(&file);
 	}
-	setMidiHandler(&mf,midiFun);
-	setSysexHandler(&mf,sysexFun);
-	setMetaHandler(&mf,metaFun);
+	*/
 	
-	mf._paused = FALSE;
-	mf._looping = FALSE;
-	//mf._tickTime = 2083;
-	//synchTracks(&mf);
+	readInputs();	
 	
-	while(!isEOF(&mf)){
-		getNextEvent(&mf);
-		if(!uartReceiveBufferIsEmpty()){
-				byteValue = (unsigned char)uartGetByte();
-				if(readMidiMessage(byteValue,&numOfBytes) == TRUE)
-					sendMidiMessage(numOfBytes);
-			
-			}	
-	}
-	
-	closeMIDIFile(&mf);
-	lcdPrintData("Finished",8);
-	while(1){}
-	// << MIDI
-	
-	readInputs(&pot,buttons);
-	
-	f_read(&file,&fam,sizeof(fam),&numOfBytes);
-	f_lseek(&file,0);
-	
-	setInputs();
-	while(1){
-			get_input:			
-			if((input = readInputs(&pot,buttons)) != NONE){				
+	while(1){						
+			if((input = readInputs()) != NONE){	
+				lcdClear();
+				if(input >= BUTTON0 && input <= BUTTON3){
+					currentMode = input;
+					currentAction = NONE;
+					idx = 0;
+					num = 0;					
+				}
+				else if(input >= JOY_UP && input <= JOY_PRESS){
+					currentAction = input;
+				}
 				switch(input){
-					case POT:	 goto get_input;
-					case BUTTON0: 
-							if(ind > 0)
-								ind--;																					
-							break;
-					case BUTTON1: 
-							if(!f_eof(&file))
-								ind++;
-							break;
-					case BUTTON2:
-							lcdPrintData("Button 3",8); 
-							break;
-					case BUTTON3:
-							lcdPrintData("Button 4",8);
-							break;
+					case BUTTON0:	// select sound						
+						createFileList(files,".FAM",&num);						
+						break;						
+					case BUTTON1:
+						break;						
+					case BUTTON2:	// play midi
+						createFileList(files,".MID",&num);
+						handleFileList(currentMode,currentAction,idx,num,files);
+						break;
+					case BUTTON3:	// record midi
+						break;
+					case JOY_UP:	if(idx > 0) idx--;	
+									handleFileList(currentMode,currentAction,idx,num,files);
+									break;
+					case JOY_RIGHT:	break;
+					case JOY_DOWN:	if(idx < (num - 1)) idx++; 
+									handleFileList(currentMode,currentAction,idx,num,files);
+									break;
+					case JOY_LEFT:	break;
+					case JOY_PRESS:	if(currentMode == BUTTON2)
+										setMidiFile(files[idx]);
+									break;							
 				}
 				
-				lcdClear();
-				lcdGotoXY(0,0);
-				itoa((ind + 1),indstr,10);
-				lcdPrintData(indstr,2);
-				f_lseek(&file,ind * sizeof(struct sndfamily));
-				f_read(&file,&fam,sizeof(fam),&numOfBytes);
-				lcdGotoXY(0,1);
-				lcdPrintData(fam.name,strlen(fam.name));
-				sendProgramChange(fam.bank,fam.prog);
-				_delay_ms(250);
+					
+				//lcdClear();
+				//lcdGotoXY(0,0);
+				//itoa((ind + 1),indstr,10);
+				//lcdPrintData(indstr,2);
+				//f_lseek(&file,ind * sizeof(struct sndfamily));
+				//f_read(&file,&fam,sizeof(fam),&numOfBytes);
+				//lcdGotoXY(0,1);
+				//lcdPrintData(fam.name,strlen(fam.name));
+				//sendProgramChange(fam.bank,fam.prog);
+				//_delay_ms(250);
 			}
 			
 			if(!uartReceiveBufferIsEmpty()){
 				byteValue = (unsigned char)uartGetByte();
-				if(readMidiMessage(byteValue,&numOfBytes) == TRUE)
-					sendMidiMessage(numOfBytes);
+				if(readMidiMessage(byteValue,&num) == TRUE)
+					sendMidiMessage(num);
 			
 			}
 		}
 		
-		f_close(&file);
+		//f_close(&file); 
 		f_mount(0,NULL);
 		
 }

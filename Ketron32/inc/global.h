@@ -26,7 +26,7 @@
 #include "avrlibdefs.h"
 // global AVRLIB types definitions
 #include "avrlibtypes.h"
-
+#include "ff.h"
 // project/system dependent defines
 
 // CPU clock speed
@@ -38,6 +38,8 @@
 //#define F_CPU        3686400               		// 3.69MHz processor
 #define CYCLES_PER_US ((F_CPU+500000)/1000000) 	// cpu cycles per microsecond
 
+#define MAX_FILES		10
+
 #define SCK PB7
 #define MOSI PB5
 #define CS PB4
@@ -48,20 +50,46 @@
 #define SW2		PB2
 #define SW3		PB3 
 
+// PC2,PC3,PC4,PC5: JTAG - don't use
+#define	JOY_N	PC6
+#define JOY_E	PC7
+#define JOY_S	PA1
+#define JOY_W	PA2
+#define JOY_T	PA3
+
+#define	JOY_N_PORT	PORTC
+#define JOY_E_PORT	PORTC
+#define JOY_S_PORT	PORTA
+#define JOY_W_PORT	PORTA
+#define JOY_T_PORT	PORTA
+
+#define	JOY_N_PIN	PINC
+#define JOY_E_PIN	PINC
+#define JOY_S_PIN	PINA
+#define JOY_W_PIN	PINA
+#define JOY_T_PIN	PINA
+
+#define	JOY_N_DDR	DDRC
+#define JOY_E_DDR	DDRC
+#define JOY_S_DDR	DDRA
+#define JOY_W_DDR	DDRA
+#define JOY_T_DDR	DDRA
+
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
-uint32_t getMicros();
-uint32_t getMillis();
-void addMillis();
-
-typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,POT}  INPUT;
-	
 struct sndfamily{
 	unsigned char bank;
 	unsigned char prog;
 	char name[50];
 };
+
+typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,JOY_UP,JOY_RIGHT,JOY_DOWN,JOY_LEFT,JOY_PRESS,POT}  INPUT;
+	
+uint32_t getMicros();
+uint32_t getMillis();
+void addMillis();
+
 
 // arduino defines
 #define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
@@ -71,5 +99,9 @@ struct sndfamily{
 #define MILLIS_INC (MICROSECONDS_PER_TIMER0_OVERFLOW / 1000)
 #define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
 #define FRACT_MAX (1000 >> 3)
+
+#define MIDI_PLAY	0
+#define MIDI_REC	1
+#define SOUND_SEL	2
 
 #endif

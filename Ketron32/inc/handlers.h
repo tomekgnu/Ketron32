@@ -16,6 +16,15 @@ void rx_handler(unsigned char c);
 void configTimers();
 void toggleLed();
 void setInputs();
-INPUT readInputs(unsigned char *,unsigned char[]);
+INPUT readInputs();
+void handleFileList(unsigned char currentMode,unsigned char currentAction,unsigned char i,unsigned char n,char (*list)[9]);
+unsigned char setMidiFile(char *);
+unsigned char midiRecord(int);
+unsigned char soundSelect(int);
+unsigned char myFunction(int);
+FRESULT createFileList(char (*tab)[9],char *type,unsigned char *numfiles);
 
+
+static unsigned char (*input_handlers[4])(unsigned char) = {setMidiFile,midiRecord,soundSelect,myFunction};
+	
 #endif /* HANDLERS_H_ */
