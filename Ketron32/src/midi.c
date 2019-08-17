@@ -21,6 +21,7 @@ unsigned char midiReadIndex;
 unsigned char midiBytesToIgnore;
 BOOL noteEvent = FALSE;
 
+unsigned char playVolume,fileVolume;
 
 /* simple map of midi messages
       first byte
@@ -198,7 +199,19 @@ void sysexFun(sysex_event *ev){
 	
 }
 
-void midiFun(midi_event *ev){
+void midiFun(midi_event *ev){	
+	if((ev->data[0] & 0xF0) == 0x90)
+		ev->data[2] = fileVolume;
+	else if((ev->data[0] & 0xF0) == 0x80)
+		ev->data[2] = 0;
 	ev->data[0] = ev->data[0] | ev->channel;
 	sendMidiBuffer(ev->data,ev->size);
+}
+
+void midiFileVolume(unsigned char vol){
+	fileVolume = vol;
+}
+
+void midiPlayVolume(unsigned char vol){	
+	playVolume = vol;
 }

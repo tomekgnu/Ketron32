@@ -123,15 +123,14 @@ void setInputs(){
 	
 }
 
-INPUT readInputs(){
+INPUT readInputs(unsigned char *but_new){
 	static unsigned char adc_new = 0;
-	static unsigned char but_new[9];
 	static unsigned char adc_old = 0;
-	static unsigned char but_old[9] = {0,0,0,0,0,0,0,0,0};
+	static unsigned char but_old[10] = {0,0,0,0,0,0,0,0,0,0};
 	
-	unsigned char i;
+	INPUT i;
 	
-	adc_new = a2dConvert8bit(ADC_CH_ADC0);
+	but_new[POT] = a2dConvert8bit(ADC_CH_ADC0);
 	// read buttons
 	but_new[BUTTON0] = !(PINB & (1 << SW0));
 	but_new[BUTTON1] = !(PINB & (1 << SW1));
@@ -143,14 +142,9 @@ INPUT readInputs(){
 	but_new[JOY_RIGHT] = !(JOY_E_PIN & (1 << JOY_E));
 	but_new[JOY_DOWN] = !(JOY_S_PIN & (1 << JOY_S));
 	but_new[JOY_LEFT] = !(JOY_W_PIN & (1 << JOY_W));
-	but_new[JOY_PRESS] = !(JOY_T_PIN & (1 << JOY_T));
+	but_new[JOY_PRESS] = !(JOY_T_PIN & (1 << JOY_T));	
 	
-	if((adc_new) != adc_old){
-		adc_old = adc_new;
-		return POT;
-	}
-	
-	for(i = 0; i < 9; i++){
+	for(i = BUTTON0; i < POT; i++){
 		if(but_new[i] != but_old[i]){
 			but_old[i] = but_new[i];
 			if(but_new[i] == 1)
@@ -158,6 +152,10 @@ INPUT readInputs(){
 		}	
 	}
 	
+	if(but_new[POT] != but_old[POT]){
+		but_old[POT] = but_new[POT];
+		return POT;
+	}
 	
 	return NONE;
 	
@@ -223,56 +221,28 @@ unsigned long getMicros() {
 	return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
 }
 
-void handleFileList(unsigned char currentMode,unsigned char currentAction,unsigned char index,unsigned char number,char (*list)[9]){
-	unsigned char tmp = index - (index % 2);
-	char *ch[2] = {"*"," "};
-		
-	if(currentMode == BUTTON2){		
-		lcdGotoXY(0,0);
-		if(number == 0){
-			lcdPrintData("No files",8);
-			return;
-		}
-		
-		lcdGotoXY(0,0);
-		lcdPrintData(list[tmp],strlen(list[tmp]));
-		lcdGotoXY(9,0);
-		lcdPrintData(ch[index % 2],1);
-		if(index < number){
-			lcdGotoXY(0,1);
-			lcdPrintData(list[tmp + 1],strlen(list[tmp + 1]));
-			lcdGotoXY(9,1);
-			lcdPrintData(ch[(index + 1) % 2],1);
-		}
-	}
-}
 
-unsigned char setMidiFile(char *name){
+
+unsigned char setMidiFile(struct MD_MIDIFile *mf, char *name){
 	
-	struct MD_MIDIFile mf;	
+		
+	memset(mf,0,sizeof(struct MD_MIDIFile));
+	initialise(mf);
+	setMidiHandler(mf,midiFun);
+	setSysexHandler(mf,sysexFun);
+	setMetaHandler(mf,metaFun);
+	setFilename(mf,name);	
 	
-	memset(&mf,0,sizeof(struct MD_MIDIFile));
-	initialise(&mf);
-	setMidiHandler(&mf,midiFun);
-	setSysexHandler(&mf,sysexFun);
-	setMetaHandler(&mf,metaFun);
-	setFilename(&mf,name);	
-	
-	if(loadMIDIFile(&mf) != -1){
+	if(loadMIDIFile(mf) != -1){
 		lcdPrintData("Open failed",11);
 		_delay_ms(500);
 		return 1;
 	}	
 	
-	mf._paused = FALSE;
-	mf._looping = FALSE;	
+	mf->_paused = FALSE;
+	mf->_looping = FALSE;	
 	
-	while(!isEOF(&mf)){
-		getNextEvent(&mf);		
-	}
 	
-	closeMIDIFile(&mf);
-	lcdPrintData("Finished",8);
 	// << MIDI
 	
 	return 0;
@@ -304,24 +274,25 @@ unsigned char myFunction(int action){
 	
 }
 
-FRESULT createFileList(char (*tab)[9],char *type,unsigned char *numfiles)
+FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles)
 {
 	TCHAR path[9];
 	FRESULT res;
 	FILINFO fno;
 	FIL fil;
 	DIR dir;
-	UINT i;	
+	UINT i;		
 	
 	char *fn;   /* This function is assuming non-Unicode cfg. */
 	#if _USE_LFN
 	static char lfn[_MAX_LFN + 1];
 	fno.lfname = lfn;
 	fno.lfsize = sizeof lfn;
-	#endif
-
+	#endif	
+	
 	res = f_getcwd(path,8);
-	res = f_opendir(&dir, path);                       /* Open the directory */
+	res = f_opendir(&dir, path);                       /* Open the directory */		
+		
 	if (res == FR_OK) {		
 		for (;;) {
 			res = f_readdir(&dir, &fno);                   /* Read a directory item */
@@ -335,9 +306,12 @@ FRESULT createFileList(char (*tab)[9],char *type,unsigned char *numfiles)
 			fn = fno.fname;
 			#endif
 			if (fno.fattrib & AM_DIR) 
+				continue;			
+			if(strlen(fno.fname) >= MAX_FNAME)
 				continue;
+			memset(tab[*numfiles],0,MAX_FNAME);
 			if(strstr(fno.fname,type) != NULL || strstr(fno.fname,type) != NULL){
-				strncpy(tab[*numfiles],fn,8);
+				strncpy(tab[*numfiles],fn,strlen(fn));
 				(*numfiles)++;
 			}
 			if((*numfiles) == 10)
@@ -351,4 +325,73 @@ FRESULT createFileList(char (*tab)[9],char *type,unsigned char *numfiles)
 	//res = f_close(&fil);
 	
 	return res;
+}
+
+FRESULT setSoundFile(FIL *file,struct sndfamily *snd,unsigned char *filename){
+	FRESULT res;
+	UINT numOfBytes;
+	
+	if((res = f_open(file,filename,FA_READ)) != FR_OK)
+		lcdPrintData("Open failed",11);
+	else{
+		lcdPrintData("Open OK",7);
+		f_lseek(file,0);
+		f_read(file,snd,sizeof(struct sndfamily),&numOfBytes);				
+	}
+	
+}
+
+void createSoundList(FIL *file,unsigned char *num){
+	(*num) = file->fsize / sizeof(struct sndfamily); 
+}
+
+void handleSoundList(FIL *file,unsigned char index,unsigned char number,struct sndfamily *snd){
+	FRESULT res;
+	UINT numOfBytes;
+	struct sndfamily fam[2];
+	unsigned char tmp = index - (index % 2);
+	char *ch[2] = {"*"," "};
+	lcdGotoXY(0,0);	
+	if(number == 0){
+		lcdPrintData("No sounds",9);
+		return;
+	}	
+	f_lseek(file,tmp * sizeof(struct sndfamily));
+	f_read(file,&fam[0],sizeof(struct sndfamily),&numOfBytes);
+	lcdGotoXY(1,0);
+	lcdPrintData(fam[0].name,strlen(fam[0].name));
+	lcdGotoXY(0,0);
+	lcdPrintData(ch[index % 2],1);
+	if(f_eof(file))
+		return;
+		
+	lcdGotoXY(1,1);
+	f_read(file,&fam[1],sizeof(struct sndfamily),&numOfBytes);
+	lcdPrintData(fam[1].name,strlen(fam[1].name));
+	lcdGotoXY(0,1);
+	lcdPrintData(ch[(index + 1) % 2],1);	
+	
+	(*snd) = fam[index % 2];
+}
+
+void handleFileList(unsigned char currentMode,unsigned char currentAction,unsigned char index,unsigned char number,char (*list)[MAX_FNAME]){
+	unsigned char tmp = index - (index % 2);
+	char *ch[2] = {"*"," "};
+	
+	lcdGotoXY(0,0);
+	if(number == 0){
+		lcdPrintData("No files",8);
+		return;
+	}
+	
+	lcdGotoXY(1,0);
+	lcdPrintData(list[tmp],strlen(list[tmp]));
+	lcdGotoXY(0,0);
+	lcdPrintData(ch[index % 2],1);
+	if(index < (number -1)){
+		lcdGotoXY(1,1);
+		lcdPrintData(list[tmp + 1],strlen(list[tmp + 1]));
+		lcdGotoXY(0,1);
+		lcdPrintData(ch[(index + 1) % 2],1);
+	}
 }

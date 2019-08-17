@@ -39,6 +39,7 @@
 #define CYCLES_PER_US ((F_CPU+500000)/1000000) 	// cpu cycles per microsecond
 
 #define MAX_FILES		10
+#define MAX_FNAME		16
 
 #define SCK PB7
 #define MOSI PB5
@@ -100,8 +101,10 @@ void addMillis();
 #define FRACT_INC ((MICROSECONDS_PER_TIMER0_OVERFLOW % 1000) >> 3)
 #define FRACT_MAX (1000 >> 3)
 
-#define MIDI_PLAY	0
-#define MIDI_REC	1
-#define SOUND_SEL	2
+#define SOUND_FAMILY	BUTTON0
+#define SOUND_SELECT	BUTTON1
+#define MIDI_PLAY	BUTTON2
+#define MIDI_REC	BUTTON3
+
 
 #endif

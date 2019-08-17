@@ -11,18 +11,23 @@
 
 #include "avrlibtypes.h"
 #include "global.h"
+#include "MD_MIDIFile.h"
 
 void rx_handler(unsigned char c);
 void configTimers();
 void toggleLed();
 void setInputs();
-INPUT readInputs();
-void handleFileList(unsigned char currentMode,unsigned char currentAction,unsigned char i,unsigned char n,char (*list)[9]);
-unsigned char setMidiFile(char *);
+INPUT readInputs(unsigned char *);
+FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles);
+void handleFileList(unsigned char currentMode,unsigned char currentAction,unsigned char i,unsigned char n,char (*tab)[MAX_FNAME]);
+unsigned char setMidiFile(struct MD_MIDIFile *,char *);
 unsigned char midiRecord(int);
 unsigned char soundSelect(int);
 unsigned char myFunction(int);
-FRESULT createFileList(char (*tab)[9],char *type,unsigned char *numfiles);
+
+FRESULT setSoundFile(FIL *,struct sndfamily *,unsigned char *);
+void createSoundList(FIL *,unsigned char *);
+void handleSoundList(FIL *,unsigned char,unsigned char,struct sndfamily *);
 
 
 static unsigned char (*input_handlers[4])(unsigned char) = {setMidiFile,midiRecord,soundSelect,myFunction};

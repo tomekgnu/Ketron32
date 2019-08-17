@@ -25,23 +25,27 @@
 #include "a2d.h"
 #include "MD_MIDIFile.h"
 
-FATFS Fatfs;
-static char files[MAX_FILES][9];
 
 int main(void)
 {
+    FATFS Fatfs;
+	char (*files)[MAX_FNAME];
     unsigned char byteValue = 0;
 	unsigned char idx = 0;
-    unsigned char num = 0;
-    unsigned char currentMode = SOUND_SEL,currentAction = NONE;
+    unsigned char numOfBytes = 0;
+	unsigned char numOfItems = 0;
+    unsigned char currentMode = SOUND_FAMILY,currentAction = NONE;
+	unsigned char inputs[10];
 	INPUT input = NONE;
     struct sndfamily fam;
+	struct MD_MIDIFile mf;
     FIL file;
     FILINFO finfo;
     DIR directory;
     FRESULT res;    
 	
 	//DDRA |= (1 << PA1);		// remove
+	files = malloc(MAX_FNAME * MAX_FILES);
 	
 	configTimers();	
 	lcdInit();	
@@ -59,7 +63,6 @@ int main(void)
 	// << ADC
 	 
 	timerAttach(TIMER2OUTCOMPARE_INT,disk_timerproc);
-	//timerAttach(TIMER1OUTCOMPAREA_INT,addMillis);
 	timerAttach(TIMER0OVERFLOW_INT,addMillis);
 	
 	uartSetBaudRate(MIDI_BAUD_RATE);
@@ -83,42 +86,62 @@ int main(void)
 	}
 	*/
 	
-	readInputs();	
+	midiFileVolume(inputs[POT] / 2);
+	readInputs(inputs);	
 	
 	while(1){						
-			if((input = readInputs()) != NONE){	
+			if((input = readInputs(inputs)) >= BUTTON0 && input <= JOY_PRESS){	
 				lcdClear();
 				if(input >= BUTTON0 && input <= BUTTON3){
 					currentMode = input;
 					currentAction = NONE;
 					idx = 0;
-					num = 0;					
+					numOfItems = 0;					
 				}
 				else if(input >= JOY_UP && input <= JOY_PRESS){
 					currentAction = input;
 				}
-				switch(input){
-					case BUTTON0:	// select sound						
-						createFileList(files,".FAM",&num);						
+				switch(input){					
+					case BUTTON0:	// select sound family file						
+						createFileList(files,".FAM",&numOfItems);
+						handleFileList(currentMode,currentAction,idx,numOfItems,files);					
 						break;						
-					case BUTTON1:
+					case BUTTON1:	//select sound from file
+						createSoundList(&file,&numOfItems);
+						handleSoundList(&file,idx,numOfItems,&fam);
 						break;						
 					case BUTTON2:	// play midi
-						createFileList(files,".MID",&num);
-						handleFileList(currentMode,currentAction,idx,num,files);
+						createFileList(files,".MID",&numOfItems);
+						handleFileList(currentMode,currentAction,idx,numOfItems,files);
 						break;
 					case BUTTON3:	// record midi
 						break;
-					case JOY_UP:	if(idx > 0) idx--;	
-									handleFileList(currentMode,currentAction,idx,num,files);
+					case JOY_UP:	if(idx > 0) idx--;
+									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY)	
+										handleFileList(currentMode,currentAction,idx,numOfItems,files);
+									else if(currentMode == SOUND_SELECT){
+										handleSoundList(&file,idx,numOfItems,&fam);
+										sendProgramChange(fam.bank,fam.prog);
+									}
 									break;
 					case JOY_RIGHT:	break;
-					case JOY_DOWN:	if(idx < (num - 1)) idx++; 
-									handleFileList(currentMode,currentAction,idx,num,files);
+					case JOY_DOWN:	if(idx < (numOfItems - 1)) idx++;
+									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY) 
+										handleFileList(currentMode,currentAction,idx,numOfItems,files);
+									else if(currentMode == SOUND_SELECT){
+										handleSoundList(&file,idx,numOfItems,&fam);
+										sendProgramChange(fam.bank,fam.prog);
+									}
 									break;
 					case JOY_LEFT:	break;
-					case JOY_PRESS:	if(currentMode == BUTTON2)
-										setMidiFile(files[idx]);
+					case JOY_PRESS:	if(currentMode == MIDI_PLAY)										
+										setMidiFile(&mf,files[idx]);									
+									else if(currentMode == SOUND_FAMILY){
+										setSoundFile(&file,&fam,files[idx]);
+										sendProgramChange(fam.bank,fam.prog);
+										lcdGotoXY(0,1);
+										lcdPrintData(fam.name,strlen(fam.name));										
+									}
 									break;							
 				}
 				
@@ -131,21 +154,36 @@ int main(void)
 				//f_read(&file,&fam,sizeof(fam),&numOfBytes);
 				//lcdGotoXY(0,1);
 				//lcdPrintData(fam.name,strlen(fam.name));
-				//sendProgramChange(fam.bank,fam.prog);
+				
 				//_delay_ms(250);
 			}
+			else if(input == POT){
+				midiFileVolume(inputs[POT] / 2);
+			}
 			
+			
+			// >> process events
+			if(currentMode == BUTTON2 && currentAction == JOY_PRESS){
+				if(!isEOF(&mf)){
+					getNextEvent(&mf);
+				}
+				else{
+					closeMIDIFile(&mf);
+					lcdPrintData("Finished",8);
+					currentAction = NONE;
+				}
+			}
 			if(!uartReceiveBufferIsEmpty()){
 				byteValue = (unsigned char)uartGetByte();
-				if(readMidiMessage(byteValue,&num) == TRUE)
-					sendMidiMessage(num);
-			
+				if(readMidiMessage(byteValue,&numOfBytes) == TRUE)
+					sendMidiMessage(numOfBytes);			
 			}
+			// << process events
 		}
 		
-		//f_close(&file); 
+		f_close(&file); 
 		f_mount(0,NULL);
-		
+		free(files);
 }
 
 
