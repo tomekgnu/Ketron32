@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "global.h"
+#include "SRAMDriver.h"
 #include "uart.h"
 #include "midi.h"
 #include "handlers.h"
@@ -25,25 +26,32 @@
 #include "a2d.h"
 #include "MD_MIDIFile.h"
 
+#define MIDI_FILE	0
+#define SOUND_FILE	1
 
 int main(void)
 {
     FATFS Fatfs;
+	FIL soundFile,midiFile;
+	FILINFO finf;
+	FRESULT res;
+	FRESULT openFiles[2] = {FR_INVALID_OBJECT,FR_INVALID_OBJECT};
+	struct midiStruct mst;
 	char (*files)[MAX_FNAME];
     unsigned char byteValue = 0;
-	unsigned char idx = 0;
+	unsigned char listIndex = 0;
     unsigned char numOfBytes = 0;
 	unsigned char numOfItems = 0;
     unsigned char currentMode = SOUND_FAMILY,currentAction = NONE;
+	BOOL endRecording = TRUE;
 	unsigned char inputs[10];
+	
 	INPUT input = NONE;
     struct sndfamily fam;
 	struct MD_MIDIFile mf;
-    FIL file;
-    FILINFO finfo;
-    DIR directory;
-    FRESULT res;    
-	
+      
+	unsigned long microseconds;
+	unsigned long delta;
 	//DDRA |= (1 << PA1);		// remove
 	files = malloc(MAX_FNAME * MAX_FILES);
 	
@@ -53,6 +61,7 @@ int main(void)
 	midiInit();	
 	spiInit();	
 	setInputs();
+	InitSRAM();
 	
 	// >> ADC
 	a2dInit();
@@ -69,13 +78,15 @@ int main(void)
 	uartSetRxHandler(rx_handler);
 	uartFlushReceiveBuffer();
 	
-	lcdGotoXY(0,0);	
+	lcdGotoXY(0,0);		
 		
 	if(f_mount(0,&Fatfs) != FR_OK)
 		lcdPrintData("Mount failed",12);
 	else
 		lcdPrintData("Mount OK",8);
-	lcdGotoXY(0,1);		
+	lcdGotoXY(0,1);
+	if(checkSRAM() == TRUE)
+		lcdPrintData("SRAM OK",7);		
 	/*
 	res = disk_initialize(0);		
 	if((res = f_open(&file,"Piano.fam",FA_READ)) != FR_OK)
@@ -86,6 +97,7 @@ int main(void)
 	}
 	*/
 	
+	
 	midiFileVolume(inputs[POT] / 2);
 	readInputs(inputs);	
 	
@@ -95,7 +107,7 @@ int main(void)
 				if(input >= BUTTON0 && input <= BUTTON3){
 					currentMode = input;
 					currentAction = NONE;
-					idx = 0;
+					listIndex = 0;
 					numOfItems = 0;					
 				}
 				else if(input >= JOY_UP && input <= JOY_PRESS){
@@ -103,44 +115,75 @@ int main(void)
 				}
 				switch(input){					
 					case BUTTON0:	// select sound family file						
-						createFileList(files,".FAM",&numOfItems);
-						handleFileList(currentMode,currentAction,idx,numOfItems,files);					
-						break;						
-					case BUTTON1:	//select sound from file
-						createSoundList(&file,&numOfItems);
-						handleSoundList(&file,idx,numOfItems,&fam);
-						break;						
+							createFileList(files,".FAM",&numOfItems);
+							handleFileList(currentMode,currentAction,listIndex,numOfItems,files);					
+							break;						
+					case BUTTON1:	//select sound from file						
+							break;						
 					case BUTTON2:	// play midi
-						createFileList(files,".MID",&numOfItems);
-						handleFileList(currentMode,currentAction,idx,numOfItems,files);
-						break;
+							createFileList(files,".MID",&numOfItems);
+							handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
+							break;
 					case BUTTON3:	// record midi
-						break;
-					case JOY_UP:	if(idx > 0) idx--;
+							endRecording = !endRecording;
+									
+							if(endRecording == FALSE){
+								SRAM_seekWrite(0,SEEK_SET);										
+								f_open(&soundFile,"SONG.MID",FA_WRITE | FA_CREATE_ALWAYS);
+								writeMidi(&soundFile);
+								lcdGotoXY(0,0);
+								lcdPrintData("Recording",9);
+								microseconds = getMicros();
+							}
+							else{
+								SRAM_seekRead(0,SEEK_SET);
+								readSRAM(((unsigned char *)&mst),sizeof(struct midiStruct));
+								microseconds = getMicros() + mst.delta;
+								lcdPrintData("Stopped",7);
+								f_write(&soundFile,"\x01\xFF\x2F\x00",4,&numOfBytes);
+								f_close(&soundFile);
+										
+							} 
+							break;
+					case JOY_UP:	if(listIndex > 0) listIndex--;
 									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY)	
-										handleFileList(currentMode,currentAction,idx,numOfItems,files);
+										handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
 									else if(currentMode == SOUND_SELECT){
-										handleSoundList(&file,idx,numOfItems,&fam);
+										handleSoundList(&soundFile,listIndex,numOfItems,&fam);
 										sendProgramChange(fam.bank,fam.prog);
 									}
 									break;
 					case JOY_RIGHT:	break;
-					case JOY_DOWN:	if(idx < (numOfItems - 1)) idx++;
+					case JOY_DOWN:	if(listIndex < (numOfItems - 1)) listIndex++;
 									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY) 
-										handleFileList(currentMode,currentAction,idx,numOfItems,files);
+										handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
 									else if(currentMode == SOUND_SELECT){
-										handleSoundList(&file,idx,numOfItems,&fam);
+										handleSoundList(&soundFile,listIndex,numOfItems,&fam);
 										sendProgramChange(fam.bank,fam.prog);
 									}
 									break;
 					case JOY_LEFT:	break;
 					case JOY_PRESS:	if(currentMode == MIDI_PLAY)										
-										setMidiFile(&mf,files[idx]);									
+										setMidiFile(&mf,files[listIndex]);									
 									else if(currentMode == SOUND_FAMILY){
-										setSoundFile(&file,&fam,files[idx]);
+										if(openFiles[SOUND_FILE] == FR_OK){
+											f_close(&soundFile);
+											openFiles[SOUND_FILE] = FR_INVALID_OBJECT;
+										}
+										openFiles[SOUND_FILE] = setSoundFile(&soundFile,&fam,files[listIndex]);	// f_open
+										createSoundList(&soundFile,&numOfItems);
+										handleSoundList(&soundFile,listIndex,numOfItems,&fam);
 										sendProgramChange(fam.bank,fam.prog);
+										currentMode = SOUND_SELECT;																				
+									}
+									else if(currentMode == SOUND_SELECT){
+										lcdClear();
+										lcdGotoXY(0,0);
+										lcdPrintData("Selected: ",10);
 										lcdGotoXY(0,1);
-										lcdPrintData(fam.name,strlen(fam.name));										
+										lcdPrintData(fam.name,strlen(fam.name));
+										f_close(&soundFile);
+										openFiles[SOUND_FILE] = FR_INVALID_OBJECT;
 									}
 									break;							
 				}
@@ -163,7 +206,7 @@ int main(void)
 			
 			
 			// >> process events
-			if(currentMode == BUTTON2 && currentAction == JOY_PRESS){
+			if(currentMode == MIDI_PLAY && currentAction == JOY_PRESS){
 				if(!isEOF(&mf)){
 					getNextEvent(&mf);
 				}
@@ -173,41 +216,33 @@ int main(void)
 					currentAction = NONE;
 				}
 			}
+			else if(currentMode == MIDI_REC && endRecording == TRUE){
+				if(getMicros() > microseconds){
+					sendMidiBuffer(mst.midiEvent,mst.size);
+					readSRAM(((unsigned char *)&mst),sizeof(struct midiStruct));
+					microseconds = getMicros() + mst.delta; 
+				}
+			}
 			if(!uartReceiveBufferIsEmpty()){
 				byteValue = (unsigned char)uartGetByte();
-				if(readMidiMessage(byteValue,&numOfBytes) == TRUE)
-					sendMidiMessage(numOfBytes);			
+				if(readMidiMessage(byteValue,&numOfBytes) == TRUE){
+					sendMidiMessage(numOfBytes);
+					if(currentMode == MIDI_REC && endRecording == FALSE){
+						delta = (getMicros() - microseconds);
+						//WriteVarLen(&soundFile,delta);
+						writeSRAM((unsigned char *)getMidiStruct(delta),sizeof(struct midiStruct));						
+						microseconds = getMicros();
+						//f_write(&soundFile,getMidiEvent(),(UINT)numOfBytes,((UINT *)&numOfItems));
+					}				
+					
+				}
+				
 			}
+			
 			// << process events
 		}
 		
-		f_close(&file); 
+		f_close(&soundFile); 
 		f_mount(0,NULL);
-		free(files);
+		free(files);		
 }
-
-
-void tickMetronome(struct MD_MIDIFile *m)
-// flash a LED to the beat
-{
-  static uint32_t	lastBeatTime = 0;
-  static BOOL	inBeat = FALSE;
-  uint16_t	beatTime;
-
-  beatTime = 60000/m->_tempo;		// msec/beat = ((60sec/min)*(1000 ms/sec))/(beats/min)
-  if (!inBeat)
-  {
-    if ((getMillis() - lastBeatTime) >= beatTime)
-    {
-      lastBeatTime = getMillis();
-      inBeat = TRUE;
-    }
-  }
-  else
-  {
-    if ((getMillis() - lastBeatTime) >= 100)	// keep the flash on for 100ms only    {
-      
-      inBeat = FALSE;
-    }
-  }
-

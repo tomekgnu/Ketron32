@@ -40,7 +40,14 @@
 
 #define MIDI_BAUD_RATE			31250
 
+struct midiStruct{
+	unsigned long delta;
+	unsigned char size;
+	unsigned char midiEvent[3];	
+};
+	
 unsigned char * getMidiEvent();
+struct midiStruct * getMidiStruct(unsigned long dt);
 BOOL readMidiMessage(unsigned char c,unsigned char *len);
 void sendMidiMessage(unsigned char num);
 void sendMidiBuffer(unsigned char *buf,unsigned char num);
@@ -53,4 +60,8 @@ void sysexFun(sysex_event *ev);
 void midiInit(void);
 void midiPoll(unsigned char byte);
 unsigned char commandLen(unsigned char cmd);
+
+
+
+
 #endif

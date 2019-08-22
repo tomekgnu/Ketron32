@@ -28,6 +28,8 @@ src\rprintf.c
 
 src\spi.c
 
+src\SRAMDriver.c
+
 src\timer.c
 
 src\uart.c

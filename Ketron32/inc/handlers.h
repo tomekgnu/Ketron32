@@ -28,8 +28,8 @@ unsigned char myFunction(int);
 FRESULT setSoundFile(FIL *,struct sndfamily *,unsigned char *);
 void createSoundList(FIL *,unsigned char *);
 void handleSoundList(FIL *,unsigned char,unsigned char,struct sndfamily *);
-
-
+void writeMidi(FIL *file);
+void WriteVarLen(FIL *file,unsigned long value);
 static unsigned char (*input_handlers[4])(unsigned char) = {setMidiFile,midiRecord,soundSelect,myFunction};
 	
 #endif /* HANDLERS_H_ */

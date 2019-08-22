@@ -203,6 +203,9 @@
     <Compile Include="inc\spi.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="inc\SRAMDriver.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="inc\timer.h">
       <SubType>compile</SubType>
     </Compile>
@@ -246,6 +249,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\spi.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\SRAMDriver.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\timer.c">

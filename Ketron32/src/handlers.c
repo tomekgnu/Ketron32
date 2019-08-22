@@ -46,7 +46,7 @@ DWORD get_fattime(){
 
 void configTimers()
 {
-	 
+	 // timer0: for microseconds
 	 #if defined(TCCR0A) && defined(WGM01)
 	 sbi(TCCR0A, WGM01);
 	 sbi(TCCR0A, WGM00);
@@ -221,8 +221,6 @@ unsigned long getMicros() {
 	return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
 }
 
-
-
 unsigned char setMidiFile(struct MD_MIDIFile *mf, char *name){
 	
 		
@@ -247,6 +245,7 @@ unsigned char setMidiFile(struct MD_MIDIFile *mf, char *name){
 	
 	return 0;
 }
+
 
 unsigned char midiRecord(int action){
 	itoa((int)action,indstr,10);
@@ -314,7 +313,7 @@ FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles
 				strncpy(tab[*numfiles],fn,strlen(fn));
 				(*numfiles)++;
 			}
-			if((*numfiles) == 10)
+			if((*numfiles) == MAX_FILES)
 				break;
 			//res = f_write(&fil,fn,strlen(fn),&i);
 			//res = f_write(&fil,"\n",1,&i);	// newline
@@ -388,10 +387,55 @@ void handleFileList(unsigned char currentMode,unsigned char currentAction,unsign
 	lcdPrintData(list[tmp],strlen(list[tmp]));
 	lcdGotoXY(0,0);
 	lcdPrintData(ch[index % 2],1);
-	if(index < (number -1)){
+	if(index < number){
 		lcdGotoXY(1,1);
 		lcdPrintData(list[tmp + 1],strlen(list[tmp + 1]));
 		lcdGotoXY(0,1);
 		lcdPrintData(ch[(index + 1) % 2],1);
+	}
+}
+
+void writeMidi(FIL *file){
+	UINT br;
+	/*
+	f_write(file,"MThd",4,&br);		// marker
+	f_write(file,"\x00\x00\x00\x06",4,&br);	// length of data
+	f_write(file,"\x00\x01",2,&br);		// SMF type
+	f_write(file,"\x00\x02",2,&br);		// number of tracks
+	f_write(file,"\x01\xE0",2,&br);	// PPQ
+	
+	// midi tempo track
+	f_write(file,"MTrk",4,&br);			// marker
+	f_write(file,"\x00\x00\x00\x19",4,&br);	// length of following data
+	f_write(file,"\x00\xFF\x58\x04\x04\x02\x18\x08",8,&br);		// meta event: time signature
+	f_write(file,"\x00\xFF\x59\x02\x02\x00",6,&br);		// meta event: key signature
+	f_write(file,"\x00\xFF\x51\x03\x0F\x42\x40",7,&br);	// meta event: set tempo
+	f_write(file,"\x01\xFF\x2F\x00",4,&br);	// meta event:	end of track
+	
+	f_write(file,"MTrk",4,&br);			// marker
+	f_write(file,"\x00\x00\x00\x71",4,&br);	// length of following data
+	*/
+}
+
+void WriteVarLen(FIL *file,unsigned long value)
+{
+	unsigned long buffer;
+	unsigned char c;
+	UINT n;
+	
+	buffer = value & 0x7f;
+	while((value >>= 7) > 0)
+	{
+		buffer <<= 8;
+		buffer |= 0x80;
+		buffer += (value & 0x7f);
+	}
+	while(1){
+		c = ((unsigned)(buffer & 0xff));
+		f_write(file,&c,1,&n);
+		if(buffer & 0x80)
+			buffer >>= 8;
+		else
+			return;
 	}
 }
