@@ -19,12 +19,13 @@ src/main.d src/main.o: ../src/main.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\stdio.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h \
+ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\eeprom.h \
  ../inc/global.h ../inc/avrlibdefs.h ../inc/avrlibtypes.h ../inc/ff.h \
  ../inc/ffconf.h ../inc/SRAMDriver.h ../inc/uart.h ../inc/global.h \
  ../inc/buffer.h ../inc/midi.h ../inc/MD_MIDIFile.h ../inc/handlers.h \
  ../inc/buffer.h ../inc/avrlibdefs.h ../inc/lcd.h ../inc/lcdconf.h \
  ../inc/spi.h ../inc/ff.h ../inc/timer.h ../inc/diskio.h ../inc/a2d.h \
- ../inc/MD_MIDIFile.h
+ ../inc/MD_MIDIFile.h ../inc/lcdstrings.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
 
@@ -65,6 +66,8 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stdarg.h:
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\string.h:
+
+c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\eeprom.h:
 
 ../inc/global.h:
 
@@ -109,3 +112,5 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../inc/a2d.h:
 
 ../inc/MD_MIDIFile.h:
+
+../inc/lcdstrings.h:

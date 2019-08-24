@@ -24,6 +24,8 @@ unsigned char setMidiFile(struct MD_MIDIFile *,char *);
 unsigned char midiRecord(int);
 unsigned char soundSelect(int);
 unsigned char myFunction(int);
+char * getLCDString(unsigned char offset,unsigned char len);
+void checkSD(unsigned char input);
 
 FRESULT setSoundFile(FIL *,struct sndfamily *,unsigned char *);
 void createSoundList(FIL *,unsigned char *);

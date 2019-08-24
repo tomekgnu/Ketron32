@@ -38,11 +38,14 @@ c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/..
                               c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(itoa_ncheck.o) (__utoa_common)
 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strrev.o)
                               c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(utoa_ncheck.o) (strrev)
+C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
+                              src/handlers.o (eeprom_read_block)
 
 Allocating common symbols
 Common symbol       size              file
 
 uartReadyTx         0x1               src/uart.o
+Fatfs               0x232             src/main.o
 fileVolume          0x1               src/midi.o
 midiState           0x1               src/midi.o
 midiReadIndex       0x1               src/midi.o
@@ -227,6 +230,12 @@ Discarded input sections
                 0x00000000        0x6 src/SRAMDriver.o
  .text.SRAMReadStatusReg
                 0x00000000       0x2a src/SRAMDriver.o
+ .text.SRAMWriteByte
+                0x00000000       0x44 src/SRAMDriver.o
+ .text.SRAMReadByte
+                0x00000000       0x3e src/SRAMDriver.o
+ .text.checkSRAM
+                0x00000000       0x3e src/SRAMDriver.o
  .text.SRAMWritePage
                 0x00000000       0x5a src/SRAMDriver.o
  .text.SRAMReadPage
@@ -483,6 +492,9 @@ Discarded input sections
  .bss           0x00000000        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strrev.o)
  .text.avr-libc
                 0x00000000       0x20 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strrev.o)
+ .text          0x00000000        0x0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
+ .data          0x00000000        0x0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
+ .bss           0x00000000        0x0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
 
 Memory Configuration
 
@@ -622,58 +634,60 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000     0x6982
+.text           0x00000000     0x68ba
  *(.vectors)
  .vectors       0x00000000       0x54 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
                 0x00000000                __vector_default
                 0x00000000                __vectors
  *(.vectors)
  *(.progmem.gcc*)
+ .progmem.gcc_sw_table.main
+                0x00000054       0x14 src/main.o
  .progmem.gcc_sw_table.commandLen
-                0x00000054      0x100 src/midi.o
+                0x00000068      0x100 src/midi.o
  .progmem.gcc_sw_table.disk_ioctl
-                0x00000154       0x1e src/mmc.o
-                0x00000172                . = ALIGN (0x2)
-                0x00000172                __trampolines_start = .
+                0x00000168       0x1e src/mmc.o
+                0x00000186                . = ALIGN (0x2)
+                0x00000186                __trampolines_start = .
  *(.trampolines)
- .trampolines   0x00000172        0x0 linker stubs
+ .trampolines   0x00000186        0x0 linker stubs
  *(.trampolines*)
-                0x00000172                __trampolines_end = .
+                0x00000186                __trampolines_end = .
  *libprintf_flt.a:*(.progmem.data)
  *libc.a:*(.progmem.data)
  *(.progmem*)
  .progmem.data.LcdCustomChar
-                0x00000172       0x88 src/lcd.o
-                0x00000172                LcdCustomChar
-                0x000001fa                . = ALIGN (0x2)
+                0x00000186       0x88 src/lcd.o
+                0x00000186                LcdCustomChar
+                0x0000020e                . = ALIGN (0x2)
  *(.jumptables)
  *(.jumptables*)
  *(.lowtext)
  *(.lowtext*)
-                0x000001fa                __ctors_start = .
+                0x0000020e                __ctors_start = .
  *(.ctors)
-                0x000001fa                __ctors_end = .
-                0x000001fa                __dtors_start = .
+                0x0000020e                __ctors_end = .
+                0x0000020e                __dtors_start = .
  *(.dtors)
-                0x000001fa                __dtors_end = .
+                0x0000020e                __dtors_end = .
  SORT(*)(.ctors)
  SORT(*)(.dtors)
  *(.init0)
- .init0         0x000001fa        0x0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
-                0x000001fa                __init
+ .init0         0x0000020e        0x0 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
+                0x0000020e                __init
  *(.init0)
  *(.init1)
  *(.init1)
  *(.init2)
- .init2         0x000001fa        0xc C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
+ .init2         0x0000020e        0xc C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
  *(.init2)
  *(.init3)
  *(.init3)
  *(.init4)
- .init4         0x00000206       0x16 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_copy_data.o)
-                0x00000206                __do_copy_data
- .init4         0x0000021c       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_clear_bss.o)
-                0x0000021c                __do_clear_bss
+ .init4         0x0000021a       0x16 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_copy_data.o)
+                0x0000021a                __do_copy_data
+ .init4         0x00000230       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_clear_bss.o)
+                0x00000230                __do_clear_bss
  *(.init4)
  *(.init5)
  *(.init5)
@@ -684,494 +698,494 @@ END GROUP
  *(.init8)
  *(.init8)
  *(.init9)
- .init9         0x0000022c        0x8 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
+ .init9         0x00000240        0x8 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
  *(.init9)
  *(.text)
- .text          0x00000234        0x4 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
-                0x00000234                __vector_1
-                0x00000234                __vector_12
-                0x00000234                __bad_interrupt
-                0x00000234                __vector_3
-                0x00000234                __vector_17
-                0x00000234                __vector_19
-                0x00000234                __vector_2
-                0x00000234                __vector_14
-                0x00000234                __vector_18
-                0x00000234                __vector_20
-                0x00000238                . = ALIGN (0x2)
+ .text          0x00000248        0x4 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
+                0x00000248                __vector_1
+                0x00000248                __vector_12
+                0x00000248                __bad_interrupt
+                0x00000248                __vector_3
+                0x00000248                __vector_17
+                0x00000248                __vector_19
+                0x00000248                __vector_2
+                0x00000248                __vector_14
+                0x00000248                __vector_18
+                0x00000248                __vector_20
+                0x0000024c                . = ALIGN (0x2)
  *(.text.*)
  .text.a2dSetPrescaler
-                0x00000238        0xa src/a2d.o
-                0x00000238                a2dSetPrescaler
+                0x0000024c        0xa src/a2d.o
+                0x0000024c                a2dSetPrescaler
  .text.a2dSetReference
-                0x00000242       0x12 src/a2d.o
-                0x00000242                a2dSetReference
- .text.a2dInit  0x00000254       0x1c src/a2d.o
-                0x00000254                a2dInit
+                0x00000256       0x12 src/a2d.o
+                0x00000256                a2dSetReference
+ .text.a2dInit  0x00000268       0x1c src/a2d.o
+                0x00000268                a2dInit
  .text.a2dSetChannel
-                0x00000270        0xc src/a2d.o
-                0x00000270                a2dSetChannel
+                0x00000284        0xc src/a2d.o
+                0x00000284                a2dSetChannel
  .text.a2dStartConvert
-                0x0000027c        0x6 src/a2d.o
-                0x0000027c                a2dStartConvert
+                0x00000290        0x6 src/a2d.o
+                0x00000290                a2dStartConvert
  .text.a2dConvert10bit
-                0x00000282       0x20 src/a2d.o
-                0x00000282                a2dConvert10bit
+                0x00000296       0x20 src/a2d.o
+                0x00000296                a2dConvert10bit
  .text.a2dConvert8bit
-                0x000002a2        0xe src/a2d.o
-                0x000002a2                a2dConvert8bit
+                0x000002b6        0xe src/a2d.o
+                0x000002b6                a2dConvert8bit
  .text.__vector_16
-                0x000002b0       0x1e src/a2d.o
-                0x000002b0                __vector_16
+                0x000002c4       0x1e src/a2d.o
+                0x000002c4                __vector_16
  .text.bufferInit
-                0x000002ce       0x1a src/buffer.o
-                0x000002ce                bufferInit
+                0x000002e2       0x1a src/buffer.o
+                0x000002e2                bufferInit
  .text.bufferGetFromFront
-                0x000002e8       0x48 src/buffer.o
-                0x000002e8                bufferGetFromFront
+                0x000002fc       0x48 src/buffer.o
+                0x000002fc                bufferGetFromFront
  .text.bufferAddToEnd
-                0x00000330       0x46 src/buffer.o
-                0x00000330                bufferAddToEnd
- .text.mem_cpy  0x00000376       0x58 src/ff.o
+                0x00000344       0x46 src/buffer.o
+                0x00000344                bufferAddToEnd
+ .text.mem_cpy  0x0000038a       0x58 src/ff.o
  .text.get_fileinfo
-                0x000003ce       0xf6 src/ff.o
+                0x000003e2       0xf6 src/ff.o
  .text.move_window
-                0x000004c4       0xfc src/ff.o
+                0x000004d8       0xfc src/ff.o
  .text.check_fs
-                0x000005c0       0x76 src/ff.o
+                0x000005d4       0x76 src/ff.o
  .text.validate
-                0x00000636       0x34 src/ff.o
+                0x0000064a       0x34 src/ff.o
  .text.chk_mounted
-                0x0000066a      0x5cc src/ff.o
- .text.sync     0x00000c36       0xca src/ff.o
+                0x0000067e      0x5cc src/ff.o
+ .text.sync     0x00000c4a       0xca src/ff.o
  .text.clust2sect
-                0x00000d00       0x50 src/ff.o
-                0x00000d00                clust2sect
- .text.get_fat  0x00000d50      0x1c6 src/ff.o
-                0x00000d50                get_fat
- .text.dir_sdi  0x00000f16      0x170 src/ff.o
- .text.put_fat  0x00001086      0x240 src/ff.o
-                0x00001086                put_fat
+                0x00000d14       0x50 src/ff.o
+                0x00000d14                clust2sect
+ .text.get_fat  0x00000d64      0x1c6 src/ff.o
+                0x00000d64                get_fat
+ .text.dir_sdi  0x00000f2a      0x170 src/ff.o
+ .text.put_fat  0x0000109a      0x240 src/ff.o
+                0x0000109a                put_fat
  .text.create_chain
-                0x000012c6      0x1ee src/ff.o
+                0x000012da      0x1ee src/ff.o
  .text.dir_next
-                0x000014b4      0x270 src/ff.o
+                0x000014c8      0x270 src/ff.o
  .text.follow_path
-                0x00001724      0x394 src/ff.o
+                0x00001738      0x394 src/ff.o
  .text.dir_register
-                0x00001ab8       0xae src/ff.o
+                0x00001acc       0xae src/ff.o
  .text.dir_read
-                0x00001b66       0x62 src/ff.o
+                0x00001b7a       0x62 src/ff.o
  .text.remove_chain
-                0x00001bc8       0xf2 src/ff.o
- .text.f_mount  0x00001cba       0x2c src/ff.o
-                0x00001cba                f_mount
- .text.f_open   0x00001ce6      0x262 src/ff.o
-                0x00001ce6                f_open
- .text.f_read   0x00001f48      0x298 src/ff.o
-                0x00001f48                f_read
- .text.f_write  0x000021e0      0x35c src/ff.o
-                0x000021e0                f_write
- .text.f_sync   0x0000253c       0x92 src/ff.o
-                0x0000253c                f_sync
- .text.f_close  0x000025ce       0x18 src/ff.o
-                0x000025ce                f_close
+                0x00001bdc       0xf2 src/ff.o
+ .text.f_mount  0x00001cce       0x2c src/ff.o
+                0x00001cce                f_mount
+ .text.f_open   0x00001cfa      0x262 src/ff.o
+                0x00001cfa                f_open
+ .text.f_read   0x00001f5c      0x298 src/ff.o
+                0x00001f5c                f_read
+ .text.f_write  0x000021f4      0x35c src/ff.o
+                0x000021f4                f_write
+ .text.f_sync   0x00002550       0x92 src/ff.o
+                0x00002550                f_sync
+ .text.f_close  0x000025e2       0x18 src/ff.o
+                0x000025e2                f_close
  .text.f_getcwd
-                0x000025e6      0x282 src/ff.o
-                0x000025e6                f_getcwd
- .text.f_lseek  0x00002868      0x3b0 src/ff.o
-                0x00002868                f_lseek
+                0x000025fa      0x282 src/ff.o
+                0x000025fa                f_getcwd
+ .text.f_lseek  0x0000287c      0x3b0 src/ff.o
+                0x0000287c                f_lseek
  .text.f_opendir
-                0x00002c18       0xca src/ff.o
-                0x00002c18                f_opendir
+                0x00002c2c       0xca src/ff.o
+                0x00002c2c                f_opendir
  .text.f_readdir
-                0x00002ce2       0xb4 src/ff.o
-                0x00002ce2                f_readdir
+                0x00002cf6       0xb4 src/ff.o
+                0x00002cf6                f_readdir
  .text.rx_handler
-                0x00002d96       0x18 src/handlers.o
-                0x00002d96                rx_handler
+                0x00002daa       0x18 src/handlers.o
+                0x00002daa                rx_handler
  .text.get_fattime
-                0x00002dae        0x8 src/handlers.o
-                0x00002dae                get_fattime
+                0x00002dc2        0x8 src/handlers.o
+                0x00002dc2                get_fattime
  .text.configTimers
-                0x00002db6       0x2a src/handlers.o
-                0x00002db6                configTimers
+                0x00002dca       0x2a src/handlers.o
+                0x00002dca                configTimers
  .text.setInputs
-                0x00002de0       0x2a src/handlers.o
-                0x00002de0                setInputs
+                0x00002df4       0x2e src/handlers.o
+                0x00002df4                setInputs
  .text.readInputs
-                0x00002e0a       0xc0 src/handlers.o
-                0x00002e0a                readInputs
+                0x00002e22       0xdc src/handlers.o
+                0x00002e22                readInputs
  .text.addMillis
-                0x00002eca       0x6a src/handlers.o
-                0x00002eca                addMillis
+                0x00002efe       0x6a src/handlers.o
+                0x00002efe                addMillis
  .text.getMicros
-                0x00002f34       0x4e src/handlers.o
-                0x00002f34                getMicros
+                0x00002f68       0x4e src/handlers.o
+                0x00002f68                getMicros
  .text.setMidiFile
-                0x00002f82       0x8c src/handlers.o
-                0x00002f82                setMidiFile
+                0x00002fb6       0x8c src/handlers.o
+                0x00002fb6                setMidiFile
+ .text.getLCDString
+                0x00003042       0x22 src/handlers.o
+                0x00003042                getLCDString
+ .text.checkSD  0x00003064       0x9a src/handlers.o
+                0x00003064                checkSD
  .text.createFileList
-                0x0000300e      0x116 src/handlers.o
-                0x0000300e                createFileList
+                0x000030fe      0x116 src/handlers.o
+                0x000030fe                createFileList
  .text.setSoundFile
-                0x00003124       0x68 src/handlers.o
-                0x00003124                setSoundFile
+                0x00003214       0x68 src/handlers.o
+                0x00003214                setSoundFile
  .text.createSoundList
-                0x0000318c       0x24 src/handlers.o
-                0x0000318c                createSoundList
+                0x0000327c       0x24 src/handlers.o
+                0x0000327c                createSoundList
  .text.handleSoundList
-                0x000031b0      0x1a0 src/handlers.o
-                0x000031b0                handleSoundList
+                0x000032a0      0x1a4 src/handlers.o
+                0x000032a0                handleSoundList
  .text.handleFileList
-                0x00003350      0x112 src/handlers.o
-                0x00003350                handleFileList
+                0x00003444      0x116 src/handlers.o
+                0x00003444                handleFileList
  .text.writeMidi
-                0x00003462        0x2 src/handlers.o
-                0x00003462                writeMidi
+                0x0000355a        0x2 src/handlers.o
+                0x0000355a                writeMidi
  .text.lcdInitHW
-                0x00003464       0x1a src/lcd.o
-                0x00003464                lcdInitHW
+                0x0000355c       0x1a src/lcd.o
+                0x0000355c                lcdInitHW
  .text.lcdBusyWait
-                0x0000347e      0x122 src/lcd.o
-                0x0000347e                lcdBusyWait
+                0x00003576      0x122 src/lcd.o
+                0x00003576                lcdBusyWait
  .text.lcdControlWrite
-                0x000035a0       0xf0 src/lcd.o
-                0x000035a0                lcdControlWrite
+                0x00003698       0xf0 src/lcd.o
+                0x00003698                lcdControlWrite
  .text.lcdControlRead
-                0x00003690       0xd4 src/lcd.o
-                0x00003690                lcdControlRead
+                0x00003788       0xd4 src/lcd.o
+                0x00003788                lcdControlRead
  .text.lcdDataWrite
-                0x00003764       0xf0 src/lcd.o
-                0x00003764                lcdDataWrite
+                0x0000385c       0xf0 src/lcd.o
+                0x0000385c                lcdDataWrite
  .text.lcdClear
-                0x00003854        0x8 src/lcd.o
-                0x00003854                lcdClear
+                0x0000394c        0x8 src/lcd.o
+                0x0000394c                lcdClear
  .text.lcdGotoXY
-                0x0000385c       0x1e src/lcd.o
-                0x0000385c                lcdGotoXY
+                0x00003954       0x1e src/lcd.o
+                0x00003954                lcdGotoXY
  .text.lcdLoadCustomChar
-                0x0000387a       0x70 src/lcd.o
-                0x0000387a                lcdLoadCustomChar
- .text.lcdInit  0x000038ea       0x92 src/lcd.o
-                0x000038ea                lcdInit
+                0x00003972       0x70 src/lcd.o
+                0x00003972                lcdLoadCustomChar
+ .text.lcdInit  0x000039e2       0x92 src/lcd.o
+                0x000039e2                lcdInit
  .text.lcdPrintData
-                0x0000397c       0x36 src/lcd.o
-                0x0000397c                lcdPrintData
- .text.main     0x000039b2      0x572 src/main.o
-                0x000039b2                main
+                0x00003a74       0x36 src/lcd.o
+                0x00003a74                lcdPrintData
+ .text.main     0x00003aaa      0x452 src/main.o
+                0x00003aaa                main
  .text.setMidiHandler
-                0x00003f24        0x8 src/MD_MIDIFile.o
-                0x00003f24                setMidiHandler
+                0x00003efc        0x8 src/MD_MIDIFile.o
+                0x00003efc                setMidiHandler
  .text.setMetaHandler
-                0x00003f2c        0x8 src/MD_MIDIFile.o
-                0x00003f2c                setMetaHandler
+                0x00003f04        0x8 src/MD_MIDIFile.o
+                0x00003f04                setMetaHandler
  .text.setSysexHandler
-                0x00003f34        0x8 src/MD_MIDIFile.o
-                0x00003f34                setSysexHandler
+                0x00003f0c        0x8 src/MD_MIDIFile.o
+                0x00003f0c                setSysexHandler
  .text.synchTracks
-                0x00003f3c       0x4c src/MD_MIDIFile.o
-                0x00003f3c                synchTracks
+                0x00003f14       0x4c src/MD_MIDIFile.o
+                0x00003f14                synchTracks
  .text.closeMIDIFile
-                0x00003f88       0x56 src/MD_MIDIFile.o
-                0x00003f88                closeMIDIFile
+                0x00003f60       0x56 src/MD_MIDIFile.o
+                0x00003f60                closeMIDIFile
  .text.calcTickTime
-                0x00003fde       0x6a src/MD_MIDIFile.o
-                0x00003fde                calcTickTime
+                0x00003fb6       0x6a src/MD_MIDIFile.o
+                0x00003fb6                calcTickTime
  .text.setTempoAdjust
-                0x00004048       0x1e src/MD_MIDIFile.o
-                0x00004048                setTempoAdjust
+                0x00004020       0x1e src/MD_MIDIFile.o
+                0x00004020                setTempoAdjust
  .text.setTempo
-                0x00004066       0x1e src/MD_MIDIFile.o
-                0x00004066                setTempo
+                0x0000403e       0x1e src/MD_MIDIFile.o
+                0x0000403e                setTempo
  .text.setTimeSignature
-                0x00004084       0x12 src/MD_MIDIFile.o
-                0x00004084                setTimeSignature
+                0x0000405c       0x12 src/MD_MIDIFile.o
+                0x0000405c                setTimeSignature
  .text.setMicrosecondPerQuarterNote
-                0x00004096       0x36 src/MD_MIDIFile.o
-                0x00004096                setMicrosecondPerQuarterNote
+                0x0000406e       0x36 src/MD_MIDIFile.o
+                0x0000406e                setMicrosecondPerQuarterNote
  .text.initialise
-                0x000040cc       0x84 src/MD_MIDIFile.o
-                0x000040cc                initialise
- .text.restart  0x00004150       0x5c src/MD_MIDIFile.o
-                0x00004150                restart
- .text.isEOF    0x000041ac       0x5e src/MD_MIDIFile.o
-                0x000041ac                isEOF
+                0x000040a4       0x84 src/MD_MIDIFile.o
+                0x000040a4                initialise
+ .text.restart  0x00004128       0x5c src/MD_MIDIFile.o
+                0x00004128                restart
+ .text.isEOF    0x00004184       0x5e src/MD_MIDIFile.o
+                0x00004184                isEOF
  .text.tickClock
-                0x0000420a       0xb4 src/MD_MIDIFile.o
-                0x0000420a                tickClock
+                0x000041e2       0xb4 src/MD_MIDIFile.o
+                0x000041e2                tickClock
  .text.processEvents
-                0x000042be       0x7c src/MD_MIDIFile.o
-                0x000042be                processEvents
+                0x00004296       0x7c src/MD_MIDIFile.o
+                0x00004296                processEvents
  .text.getNextEvent
-                0x0000433a       0x4e src/MD_MIDIFile.o
-                0x0000433a                getNextEvent
+                0x00004312       0x4e src/MD_MIDIFile.o
+                0x00004312                getNextEvent
  .text.loadMIDIFile
-                0x00004388      0x208 src/MD_MIDIFile.o
-                0x00004388                loadMIDIFile
+                0x00004360      0x208 src/MD_MIDIFile.o
+                0x00004360                loadMIDIFile
  .text.setFilename
-                0x00004590        0xe src/MD_MIDIFile.o
-                0x00004590                setFilename
+                0x00004568        0xe src/MD_MIDIFile.o
+                0x00004568                setFilename
  .text.readMultiByte
-                0x0000459e       0x82 src/MD_MIDIHelper.o
-                0x0000459e                readMultiByte
+                0x00004576       0x82 src/MD_MIDIHelper.o
+                0x00004576                readMultiByte
  .text.readVarLen
-                0x00004620       0x9c src/MD_MIDIHelper.o
-                0x00004620                readVarLen
+                0x000045f8       0x9c src/MD_MIDIHelper.o
+                0x000045f8                readVarLen
  .text.getEndOfTrack
-                0x000046bc        0x6 src/MD_MIDITrack.o
-                0x000046bc                getEndOfTrack
+                0x00004694        0x6 src/MD_MIDITrack.o
+                0x00004694                getEndOfTrack
  .text.syncTime
-                0x000046c2        0xc src/MD_MIDITrack.o
-                0x000046c2                syncTime
+                0x0000469a        0xc src/MD_MIDITrack.o
+                0x0000469a                syncTime
  .text.restartTrack
-                0x000046ce       0x16 src/MD_MIDITrack.o
-                0x000046ce                restartTrack
+                0x000046a6       0x16 src/MD_MIDITrack.o
+                0x000046a6                restartTrack
  .text.resetTrack
-                0x000046e4       0x24 src/MD_MIDITrack.o
-                0x000046e4                resetTrack
+                0x000046bc       0x24 src/MD_MIDITrack.o
+                0x000046bc                resetTrack
  .text.closeTrack
-                0x00004708        0x6 src/MD_MIDITrack.o
-                0x00004708                closeTrack
+                0x000046e0        0x6 src/MD_MIDITrack.o
+                0x000046e0                closeTrack
  .text.parseEvent
-                0x0000470e      0x512 src/MD_MIDITrack.o
-                0x0000470e                parseEvent
+                0x000046e6      0x512 src/MD_MIDITrack.o
+                0x000046e6                parseEvent
  .text.getNextTrackEvent
-                0x00004c20       0xfc src/MD_MIDITrack.o
-                0x00004c20                getNextTrackEvent
+                0x00004bf8       0xfc src/MD_MIDITrack.o
+                0x00004bf8                getNextTrackEvent
  .text.loadTrack
-                0x00004d1c       0xe4 src/MD_MIDITrack.o
-                0x00004d1c                loadTrack
+                0x00004cf4       0xe4 src/MD_MIDITrack.o
+                0x00004cf4                loadTrack
  .text.midiInit
-                0x00004e00        0x8 src/midi.o
-                0x00004e00                midiInit
+                0x00004dd8        0x8 src/midi.o
+                0x00004dd8                midiInit
  .text.getMidiStruct
-                0x00004e08       0x16 src/midi.o
-                0x00004e08                getMidiStruct
+                0x00004de0       0x16 src/midi.o
+                0x00004de0                getMidiStruct
  .text.sendMidiMessage
-                0x00004e1e       0x30 src/midi.o
-                0x00004e1e                sendMidiMessage
+                0x00004df6       0x30 src/midi.o
+                0x00004df6                sendMidiMessage
  .text.sendMidiBuffer
-                0x00004e4e       0x32 src/midi.o
-                0x00004e4e                sendMidiBuffer
+                0x00004e26       0x32 src/midi.o
+                0x00004e26                sendMidiBuffer
  .text.sendProgramChange
-                0x00004e80       0x2e src/midi.o
-                0x00004e80                sendProgramChange
+                0x00004e58       0x2e src/midi.o
+                0x00004e58                sendProgramChange
  .text.commandLen
-                0x00004eae       0x32 src/midi.o
-                0x00004eae                commandLen
+                0x00004e86       0x32 src/midi.o
+                0x00004e86                commandLen
  .text.readMidiMessage
-                0x00004ee0       0xec src/midi.o
-                0x00004ee0                readMidiMessage
- .text.metaFun  0x00004fcc        0x2 src/midi.o
-                0x00004fcc                metaFun
+                0x00004eb8       0xec src/midi.o
+                0x00004eb8                readMidiMessage
+ .text.metaFun  0x00004fa4        0x2 src/midi.o
+                0x00004fa4                metaFun
  .text.sysexFun
-                0x00004fce        0x2 src/midi.o
-                0x00004fce                sysexFun
- .text.midiFun  0x00004fd0       0x16 src/midi.o
-                0x00004fd0                midiFun
+                0x00004fa6        0x2 src/midi.o
+                0x00004fa6                sysexFun
+ .text.midiFun  0x00004fa8       0x16 src/midi.o
+                0x00004fa8                midiFun
  .text.midiFileVolume
-                0x00004fe6        0x6 src/midi.o
-                0x00004fe6                midiFileVolume
+                0x00004fbe        0x6 src/midi.o
+                0x00004fbe                midiFileVolume
  .text.rcvr_spi
-                0x00004fec        0xc src/mmc.o
+                0x00004fc4        0xc src/mmc.o
  .text.wait_ready
-                0x00004ff8       0x26 src/mmc.o
+                0x00004fd0       0x26 src/mmc.o
  .text.deselect
-                0x0000501e        0x8 src/mmc.o
- .text.select   0x00005026       0x22 src/mmc.o
+                0x00004ff6        0x8 src/mmc.o
+ .text.select   0x00004ffe       0x22 src/mmc.o
  .text.rcvr_datablock
-                0x00005048       0x8c src/mmc.o
+                0x00005020       0x8c src/mmc.o
  .text.xmit_datablock
-                0x000050d4       0x70 src/mmc.o
+                0x000050ac       0x70 src/mmc.o
  .text.send_cmd
-                0x00005144       0xa8 src/mmc.o
+                0x0000511c       0xa8 src/mmc.o
  .text.disk_initialize
-                0x000051ec      0x182 src/mmc.o
-                0x000051ec                disk_initialize
+                0x000051c4      0x182 src/mmc.o
+                0x000051c4                disk_initialize
  .text.disk_status
-                0x0000536e        0xe src/mmc.o
-                0x0000536e                disk_status
+                0x00005346        0xe src/mmc.o
+                0x00005346                disk_status
  .text.disk_read
-                0x0000537c       0xa6 src/mmc.o
-                0x0000537c                disk_read
+                0x00005354       0xa6 src/mmc.o
+                0x00005354                disk_read
  .text.disk_write
-                0x00005422       0xd8 src/mmc.o
-                0x00005422                disk_write
+                0x000053fa       0xd8 src/mmc.o
+                0x000053fa                disk_write
  .text.disk_ioctl
-                0x000054fa      0x370 src/mmc.o
-                0x000054fa                disk_ioctl
+                0x000054d2      0x370 src/mmc.o
+                0x000054d2                disk_ioctl
  .text.disk_timerproc
-                0x0000586a       0x28 src/mmc.o
-                0x0000586a                disk_timerproc
- .text.spiInit  0x00005892       0x22 src/spi.o
-                0x00005892                spiInit
+                0x00005842       0x28 src/mmc.o
+                0x00005842                disk_timerproc
+ .text.spiInit  0x0000586a       0x22 src/spi.o
+                0x0000586a                spiInit
  .text.spiSendByte
-                0x000058b4        0x8 src/spi.o
-                0x000058b4                spiSendByte
+                0x0000588c        0x8 src/spi.o
+                0x0000588c                spiSendByte
  .text.spiTransferByte
-                0x000058bc        0xa src/spi.o
-                0x000058bc                spiTransferByte
+                0x00005894        0xa src/spi.o
+                0x00005894                spiTransferByte
  .text.SRAM_resetReader
-                0x000058c6       0x22 src/SRAMDriver.o
-                0x000058c6                SRAM_resetReader
+                0x0000589e       0x22 src/SRAMDriver.o
+                0x0000589e                SRAM_resetReader
  .text.SRAM_resetWriter
-                0x000058e8       0x22 src/SRAMDriver.o
-                0x000058e8                SRAM_resetWriter
+                0x000058c0       0x22 src/SRAMDriver.o
+                0x000058c0                SRAM_resetWriter
  .text.incrementReader
-                0x0000590a       0xa8 src/SRAMDriver.o
-                0x0000590a                incrementReader
+                0x000058e2       0xa8 src/SRAMDriver.o
+                0x000058e2                incrementReader
  .text.SRAM_seekRead
-                0x000059b2       0x3e src/SRAMDriver.o
-                0x000059b2                SRAM_seekRead
+                0x0000598a       0x3e src/SRAMDriver.o
+                0x0000598a                SRAM_seekRead
  .text.incrementWriter
-                0x000059f0       0xa8 src/SRAMDriver.o
-                0x000059f0                incrementWriter
+                0x000059c8       0xa8 src/SRAMDriver.o
+                0x000059c8                incrementWriter
  .text.SRAM_seekWrite
-                0x00005a98       0x3e src/SRAMDriver.o
-                0x00005a98                SRAM_seekWrite
- .text.ReadSPI  0x00005ad6        0x8 src/SRAMDriver.o
-                0x00005ad6                ReadSPI
+                0x00005a70       0x3e src/SRAMDriver.o
+                0x00005a70                SRAM_seekWrite
+ .text.ReadSPI  0x00005aae        0x8 src/SRAMDriver.o
+                0x00005aae                ReadSPI
  .text.SRAMEnable
-                0x00005ade       0x30 src/SRAMDriver.o
-                0x00005ade                SRAMEnable
+                0x00005ab6       0x30 src/SRAMDriver.o
+                0x00005ab6                SRAMEnable
  .text.SRAMDisable
-                0x00005b0e       0x32 src/SRAMDriver.o
-                0x00005b0e                SRAMDisable
+                0x00005ae6       0x32 src/SRAMDriver.o
+                0x00005ae6                SRAMDisable
  .text.InitSRAM
-                0x00005b40       0x56 src/SRAMDriver.o
-                0x00005b40                InitSRAM
+                0x00005b18       0x56 src/SRAMDriver.o
+                0x00005b18                InitSRAM
  .text.SRAMWriteStatusReg
-                0x00005b96       0x26 src/SRAMDriver.o
-                0x00005b96                SRAMWriteStatusReg
+                0x00005b6e       0x26 src/SRAMDriver.o
+                0x00005b6e                SRAMWriteStatusReg
  .text.SRAMCommand
-                0x00005bbc       0x2c src/SRAMDriver.o
-                0x00005bbc                SRAMCommand
- .text.SRAMWriteByte
-                0x00005be8       0x44 src/SRAMDriver.o
-                0x00005be8                SRAMWriteByte
- .text.SRAMReadByte
-                0x00005c2c       0x3e src/SRAMDriver.o
-                0x00005c2c                SRAMReadByte
- .text.checkSRAM
-                0x00005c6a       0x3e src/SRAMDriver.o
-                0x00005c6a                checkSRAM
+                0x00005b94       0x2c src/SRAMDriver.o
+                0x00005b94                SRAMCommand
  .text.SRAMWriteSeq
-                0x00005ca8       0x80 src/SRAMDriver.o
-                0x00005ca8                SRAMWriteSeq
+                0x00005bc0       0x80 src/SRAMDriver.o
+                0x00005bc0                SRAMWriteSeq
  .text.writeSRAM
-                0x00005d28      0x134 src/SRAMDriver.o
-                0x00005d28                writeSRAM
+                0x00005c40      0x134 src/SRAMDriver.o
+                0x00005c40                writeSRAM
  .text.SRAMReadSeq
-                0x00005e5c       0x80 src/SRAMDriver.o
-                0x00005e5c                SRAMReadSeq
+                0x00005d74       0x80 src/SRAMDriver.o
+                0x00005d74                SRAMReadSeq
  .text.readSRAM
-                0x00005edc      0x134 src/SRAMDriver.o
-                0x00005edc                readSRAM
+                0x00005df4      0x134 src/SRAMDriver.o
+                0x00005df4                readSRAM
  .text.delay_us
-                0x00006010       0x36 src/timer.o
-                0x00006010                delay_us
+                0x00005f28       0x36 src/timer.o
+                0x00005f28                delay_us
  .text.timerAttach
-                0x00006046       0x16 src/timer.o
-                0x00006046                timerAttach
+                0x00005f5e       0x16 src/timer.o
+                0x00005f5e                timerAttach
  .text.__vector_11
-                0x0000605c       0xa6 src/timer.o
-                0x0000605c                __vector_11
+                0x00005f74       0xa6 src/timer.o
+                0x00005f74                __vector_11
  .text.__vector_9
-                0x00006102       0x5a src/timer.o
-                0x00006102                __vector_9
+                0x0000601a       0x5a src/timer.o
+                0x0000601a                __vector_9
  .text.__vector_5
-                0x0000615c       0x80 src/timer.o
-                0x0000615c                __vector_5
+                0x00006074       0x80 src/timer.o
+                0x00006074                __vector_5
  .text.__vector_10
-                0x000061dc       0x5a src/timer.o
-                0x000061dc                __vector_10
+                0x000060f4       0x5a src/timer.o
+                0x000060f4                __vector_10
  .text.__vector_7
-                0x00006236       0x5a src/timer.o
-                0x00006236                __vector_7
+                0x0000614e       0x5a src/timer.o
+                0x0000614e                __vector_7
  .text.__vector_8
-                0x00006290       0x5a src/timer.o
-                0x00006290                __vector_8
+                0x000061a8       0x5a src/timer.o
+                0x000061a8                __vector_8
  .text.__vector_6
-                0x000062ea       0x5a src/timer.o
-                0x000062ea                __vector_6
+                0x00006202       0x5a src/timer.o
+                0x00006202                __vector_6
  .text.__vector_4
-                0x00006344       0x5a src/timer.o
-                0x00006344                __vector_4
+                0x0000625c       0x5a src/timer.o
+                0x0000625c                __vector_4
  .text.uartInitBuffers
-                0x0000639e       0x22 src/uart.o
-                0x0000639e                uartInitBuffers
+                0x000062b6       0x22 src/uart.o
+                0x000062b6                uartInitBuffers
  .text.uartInit
-                0x000063c0       0x30 src/uart.o
-                0x000063c0                uartInit
+                0x000062d8       0x30 src/uart.o
+                0x000062d8                uartInit
  .text.uartSetRxHandler
-                0x000063f0        0xa src/uart.o
-                0x000063f0                uartSetRxHandler
+                0x00006308        0xa src/uart.o
+                0x00006308                uartSetRxHandler
  .text.uartSetBaudRate
-                0x000063fa       0x66 src/uart.o
-                0x000063fa                uartSetBaudRate
+                0x00006312       0x66 src/uart.o
+                0x00006312                uartSetBaudRate
  .text.uartSendByte
-                0x00006460       0x10 src/uart.o
-                0x00006460                uartSendByte
+                0x00006378       0x10 src/uart.o
+                0x00006378                uartSendByte
  .text.uartReceiveByte
-                0x00006470       0x38 src/uart.o
-                0x00006470                uartReceiveByte
+                0x00006388       0x38 src/uart.o
+                0x00006388                uartReceiveByte
  .text.uartGetByte
-                0x000064a8       0x28 src/uart.o
-                0x000064a8                uartGetByte
+                0x000063c0       0x28 src/uart.o
+                0x000063c0                uartGetByte
  .text.uartFlushReceiveBuffer
-                0x000064d0        0xa src/uart.o
-                0x000064d0                uartFlushReceiveBuffer
+                0x000063e8        0xa src/uart.o
+                0x000063e8                uartFlushReceiveBuffer
  .text.uartReceiveBufferIsEmpty
-                0x000064da       0x12 src/uart.o
-                0x000064da                uartReceiveBufferIsEmpty
+                0x000063f2       0x12 src/uart.o
+                0x000063f2                uartReceiveBufferIsEmpty
  .text.__vector_15
-                0x000064ec       0x76 src/uart.o
-                0x000064ec                __vector_15
+                0x00006404       0x76 src/uart.o
+                0x00006404                __vector_15
  .text.__vector_13
-                0x00006562       0x7e src/uart.o
-                0x00006562                __vector_13
+                0x0000647a       0x7e src/uart.o
+                0x0000647a                __vector_13
  .text.libgcc.div
-                0x000065e0       0x28 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_udivmodhi4.o)
-                0x000065e0                __udivmodhi4
+                0x000064f8       0x28 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_udivmodhi4.o)
+                0x000064f8                __udivmodhi4
  .text.libgcc.div
-                0x00006608       0x44 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_udivmodsi4.o)
-                0x00006608                __udivmodsi4
+                0x00006520       0x44 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_udivmodsi4.o)
+                0x00006520                __udivmodsi4
  .text.libgcc.div
-                0x0000664c       0x2e c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_divmodsi4.o)
-                0x0000664c                __divmodsi4
+                0x00006564       0x2e c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_divmodsi4.o)
+                0x00006564                __divmodsi4
  .text.libgcc.div
-                0x0000667a       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_negsi2.o)
-                0x0000667a                __negsi2
- .text.libgcc   0x0000668a        0xc c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_tablejump2.o)
-                0x0000668a                __tablejump2__
+                0x00006592       0x10 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_negsi2.o)
+                0x00006592                __negsi2
+ .text.libgcc   0x000065a2        0xc c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_tablejump2.o)
+                0x000065a2                __tablejump2__
  .text.libgcc.mul
-                0x00006696       0x1e c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_umulhisi3.o)
-                0x00006696                __umulhisi3
+                0x000065ae       0x1e c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_umulhisi3.o)
+                0x000065ae                __umulhisi3
  .text.libgcc.mul
-                0x000066b4       0x16 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_muluhisi3.o)
-                0x000066b4                __muluhisi3
+                0x000065cc       0x16 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_muluhisi3.o)
+                0x000065cc                __muluhisi3
  .text.avr-libc
-                0x000066ca      0x242 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(malloc.o)
-                0x000066ca                malloc
-                0x000067fa                free
+                0x000065e2      0x242 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(malloc.o)
+                0x000065e2                malloc
+                0x00006712                free
  .text.avr-libc
-                0x0000690c       0x12 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strcmp.o)
-                0x0000690c                strcmp
+                0x00006824       0x12 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strcmp.o)
+                0x00006824                strcmp
  .text.avr-libc
-                0x0000691e        0xe c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strcpy.o)
-                0x0000691e                strcpy
+                0x00006836        0xe c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strcpy.o)
+                0x00006836                strcpy
  .text.avr-libc
-                0x0000692c       0x1e c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strncpy.o)
-                0x0000692c                strncpy
+                0x00006844       0x1e c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strncpy.o)
+                0x00006844                strncpy
  .text.avr-libc
-                0x0000694a       0x34 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strstr.o)
-                0x0000694a                strstr
-                0x0000697e                . = ALIGN (0x2)
+                0x00006862       0x34 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(strstr.o)
+                0x00006862                strstr
+ .text.avr-libc
+                0x00006896       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
+                0x00006896                eeprom_read_block
+                0x0000689a                eeprom_read_blraw
+                0x000068b6                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x0000697e        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_exit.o)
-                0x0000697e                _exit
-                0x0000697e                exit
+ .fini9         0x000068b6        0x0 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_exit.o)
+                0x000068b6                _exit
+                0x000068b6                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -1190,11 +1204,11 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x0000697e        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_exit.o)
+ .fini0         0x000068b6        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avr5\libgcc.a(_exit.o)
  *(.fini0)
-                0x00006982                _etext = .
+                0x000068ba                _etext = .
 
-.data           0x00800060      0x1a4 load address 0x00006982
+.data           0x00800060      0x176 load address 0x000068ba
                 0x00800060                PROVIDE (__data_start, .)
  *(.data)
  .data          0x00800060        0x6 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(malloc.o)
@@ -1221,98 +1235,101 @@ END GROUP
  .rodata.excvt.1925
                 0x008000b3       0x80 src/ff.o
  .rodata.str1.1
-                0x00800133       0x47 src/handlers.o
-                                 0x49 (size before relaxing)
+                0x00800133       0x37 src/handlers.o
+                                 0x39 (size before relaxing)
  .rodata.str1.1
-                0x0080017a       0x52 src/main.o
-                                 0x57 (size before relaxing)
+                0x0080016a       0x34 src/main.o
+                                 0x39 (size before relaxing)
  .rodata.str1.1
-                0x008001cc        0x5 src/MD_MIDIFile.o
+                0x0080019e        0x5 src/MD_MIDIFile.o
  .rodata.str1.1
-                0x008001d1       0x32 src/MD_MIDITrack.o
+                0x008001a3       0x32 src/MD_MIDITrack.o
                                  0x34 (size before relaxing)
  *(.gnu.linkonce.r*)
-                0x00800204                . = ALIGN (0x2)
- *fill*         0x00800203        0x1 
-                0x00800204                _edata = .
-                0x00800204                PROVIDE (__data_end, .)
+                0x008001d6                . = ALIGN (0x2)
+ *fill*         0x008001d5        0x1 
+                0x008001d6                _edata = .
+                0x008001d6                PROVIDE (__data_end, .)
 
-.bss            0x00800204      0x100
-                0x00800204                PROVIDE (__bss_start, .)
+.bss            0x008001d6      0x343
+                0x008001d6                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
- .bss.CurrVol   0x00800204        0x1 src/ff.o
- .bss.Fsid      0x00800205        0x2 src/ff.o
- .bss.FatFs     0x00800207        0x2 src/ff.o
- .bss.but_old.2472
-                0x00800209        0xa src/handlers.o
+ .bss.CurrVol   0x008001d6        0x1 src/ff.o
+ .bss.Fsid      0x008001d7        0x2 src/ff.o
+ .bss.FatFs     0x008001d9        0x2 src/ff.o
+ .bss.inp_old.2524
+                0x008001db        0xb src/handlers.o
+ .bss.lcdstr    0x008001e6       0x10 src/handlers.o
  .bss.timer0_fract
-                0x00800213        0x1 src/handlers.o
+                0x008001f6        0x1 src/handlers.o
  .bss.timer0_millis
-                0x00800214        0x4 src/handlers.o
-                0x00800214                timer0_millis
+                0x008001f7        0x4 src/handlers.o
+                0x008001f7                timer0_millis
  .bss.timer0_overflow_count
-                0x00800218        0x4 src/handlers.o
-                0x00800218                timer0_overflow_count
+                0x008001fb        0x4 src/handlers.o
+                0x008001fb                timer0_overflow_count
  .bss.noteEvent
-                0x0080021c        0x1 src/midi.o
-                0x0080021c                noteEvent
- .bss.CardType  0x0080021d        0x1 src/mmc.o
- .bss.Timer2    0x0080021e        0x1 src/mmc.o
- .bss.Timer1    0x0080021f        0x1 src/mmc.o
+                0x008001ff        0x1 src/midi.o
+                0x008001ff                noteEvent
+ .bss.CardType  0x00800200        0x1 src/mmc.o
+ .bss.Timer2    0x00800201        0x1 src/mmc.o
+ .bss.Timer1    0x00800202        0x1 src/mmc.o
  .bss.currentWriter
-                0x00800220        0xd src/SRAMDriver.o
-                0x00800220                currentWriter
+                0x00800203        0xd src/SRAMDriver.o
+                0x00800203                currentWriter
  .bss.currentReader
-                0x0080022d        0xd src/SRAMDriver.o
-                0x0080022d                currentReader
+                0x00800210        0xd src/SRAMDriver.o
+                0x00800210                currentReader
  .bss.currentSRAM
-                0x0080023a        0x1 src/SRAMDriver.o
-                0x0080023a                currentSRAM
+                0x0080021d        0x1 src/SRAMDriver.o
+                0x0080021d                currentSRAM
  .bss.TimerIntFunc
-                0x0080023b       0x10 src/timer.o
+                0x0080021e       0x10 src/timer.o
  .bss.UartRxFunc
-                0x0080024b        0x2 src/uart.o
+                0x0080022e        0x2 src/uart.o
  .bss.uartTxData
-                0x0080024d       0x40 src/uart.o
+                0x00800230       0x40 src/uart.o
  .bss.uartRxData
-                0x0080028d       0x40 src/uart.o
+                0x00800270       0x40 src/uart.o
  *(COMMON)
- COMMON         0x008002cd        0x1 src/a2d.o
-                0x008002cd                a2dCompleteFlag
- COMMON         0x008002ce       0x10 src/midi.o
-                0x008002ce                fileVolume
-                0x008002cf                midiState
-                0x008002d0                midiReadIndex
-                0x008002d1                midiBytesToIgnore
-                0x008002d2                playVolume
-                0x008002d3                work_event
- COMMON         0x008002de        0x1 src/spi.o
-                0x008002de                spiTransferComplete
- COMMON         0x008002df        0xc src/timer.o
-                0x008002df                Timer0Reg0
-                0x008002e3                TimerPauseReg
-                0x008002e7                Timer2Reg0
- COMMON         0x008002eb       0x15 src/uart.o
-                0x008002eb                uartReadyTx
-                0x008002ec                uartRxBuffer
-                0x008002f4                uartBufferIndex
-                0x008002f5                uartBufferedTx
-                0x008002f6                uartTxBuffer
-                0x008002fe                uartRxOverflow
- COMMON         0x00800300        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(malloc.o)
-                0x00800300                __brkval
-                0x00800302                __flp
-                0x00800304                PROVIDE (__bss_end, .)
-                0x00006982                __data_load_start = LOADADDR (.data)
-                0x00006b26                __data_load_end = (__data_load_start + SIZEOF (.data))
+ COMMON         0x008002b0        0x1 src/a2d.o
+                0x008002b0                a2dCompleteFlag
+ COMMON         0x008002b1      0x232 src/main.o
+                0x008002b1                Fatfs
+ COMMON         0x008004e3       0x10 src/midi.o
+                0x008004e3                fileVolume
+                0x008004e4                midiState
+                0x008004e5                midiReadIndex
+                0x008004e6                midiBytesToIgnore
+                0x008004e7                playVolume
+                0x008004e8                work_event
+ COMMON         0x008004f3        0x1 src/spi.o
+                0x008004f3                spiTransferComplete
+ COMMON         0x008004f4        0xc src/timer.o
+                0x008004f4                Timer0Reg0
+                0x008004f8                TimerPauseReg
+                0x008004fc                Timer2Reg0
+ COMMON         0x00800500       0x15 src/uart.o
+                0x00800500                uartReadyTx
+                0x00800501                uartRxBuffer
+                0x00800509                uartBufferIndex
+                0x0080050a                uartBufferedTx
+                0x0080050b                uartTxBuffer
+                0x00800513                uartRxOverflow
+ COMMON         0x00800515        0x4 c:/program files (x86)/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avr5\libc.a(malloc.o)
+                0x00800515                __brkval
+                0x00800517                __flp
+                0x00800519                PROVIDE (__bss_end, .)
+                0x000068ba                __data_load_start = LOADADDR (.data)
+                0x00006a30                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x00800304        0x0
+.noinit         0x00800519        0x0
                 [!provide]                PROVIDE (__noinit_start, .)
  *(.noinit*)
                 [!provide]                PROVIDE (__noinit_end, .)
-                0x00800304                _end = .
-                0x00800304                PROVIDE (__heap_start, .)
+                0x00800519                _end = .
+                0x00800519                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0x0
  *(.eeprom*)
@@ -1391,7 +1408,7 @@ END GROUP
 .debug_sfnames
  *(.debug_sfnames)
 
-.debug_aranges  0x00000000      0x8b0
+.debug_aranges  0x00000000      0x8e0
  *(.debug_aranges)
  .debug_aranges
                 0x00000000       0x68 src/a2d.o
@@ -1400,109 +1417,114 @@ END GROUP
  .debug_aranges
                 0x000000b8      0x168 src/ff.o
  .debug_aranges
-                0x00000220       0xb8 src/handlers.o
+                0x00000220       0xc8 src/handlers.o
  .debug_aranges
-                0x000002d8       0x80 src/lcd.o
+                0x000002e8       0x80 src/lcd.o
  .debug_aranges
-                0x00000358       0x20 src/main.o
+                0x00000368       0x20 src/main.o
  .debug_aranges
-                0x00000378       0xc0 src/MD_MIDIFile.o
+                0x00000388       0xc0 src/MD_MIDIFile.o
  .debug_aranges
-                0x00000438       0x28 src/MD_MIDIHelper.o
+                0x00000448       0x28 src/MD_MIDIHelper.o
  .debug_aranges
-                0x00000460       0x60 src/MD_MIDITrack.o
+                0x00000470       0x60 src/MD_MIDITrack.o
  .debug_aranges
-                0x000004c0       0x80 src/midi.o
+                0x000004d0       0x80 src/midi.o
  .debug_aranges
-                0x00000540       0x80 src/mmc.o
+                0x00000550       0x80 src/mmc.o
  .debug_aranges
-                0x000005c0       0x38 src/spi.o
+                0x000005d0       0x38 src/spi.o
  .debug_aranges
-                0x000005f8       0xf0 src/SRAMDriver.o
+                0x00000608       0xf0 src/SRAMDriver.o
  .debug_aranges
-                0x000006e8      0x130 src/timer.o
+                0x000006f8      0x130 src/timer.o
  .debug_aranges
-                0x00000818       0x98 src/uart.o
+                0x00000828       0x98 src/uart.o
+ .debug_aranges
+                0x000008c0       0x20 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
 
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0xc278
+.debug_info     0x00000000     0xc52e
  *(.debug_info .gnu.linkonce.wi.*)
  .debug_info    0x00000000      0x4e6 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
  .debug_info    0x000004e6      0x237 src/a2d.o
  .debug_info    0x0000071d      0x2f4 src/buffer.o
  .debug_info    0x00000a11     0x2f5f src/ff.o
- .debug_info    0x00003970     0x17ba src/handlers.o
- .debug_info    0x0000512a      0x63c src/lcd.o
- .debug_info    0x00005766     0x13cf src/main.o
- .debug_info    0x00006b35     0x1372 src/MD_MIDIFile.o
- .debug_info    0x00007ea7      0x4aa src/MD_MIDIHelper.o
- .debug_info    0x00008351     0x1093 src/MD_MIDITrack.o
- .debug_info    0x000093e4      0x57b src/midi.o
- .debug_info    0x0000995f      0xa6a src/mmc.o
- .debug_info    0x0000a3c9      0x178 src/spi.o
- .debug_info    0x0000a541      0xff8 src/SRAMDriver.o
- .debug_info    0x0000b539      0x744 src/timer.o
- .debug_info    0x0000bc7d      0x5fb src/uart.o
+ .debug_info    0x00003970     0x1a03 src/handlers.o
+ .debug_info    0x00005373      0x63c src/lcd.o
+ .debug_info    0x000059af     0x1391 src/main.o
+ .debug_info    0x00006d40     0x1372 src/MD_MIDIFile.o
+ .debug_info    0x000080b2      0x4aa src/MD_MIDIHelper.o
+ .debug_info    0x0000855c     0x1093 src/MD_MIDITrack.o
+ .debug_info    0x000095ef      0x57b src/midi.o
+ .debug_info    0x00009b6a      0xa6a src/mmc.o
+ .debug_info    0x0000a5d4      0x178 src/spi.o
+ .debug_info    0x0000a74c      0xff8 src/SRAMDriver.o
+ .debug_info    0x0000b744      0x744 src/timer.o
+ .debug_info    0x0000be88      0x5fb src/uart.o
+ .debug_info    0x0000c483       0xab C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
 
-.debug_abbrev   0x00000000     0x2662
+.debug_abbrev   0x00000000     0x265c
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x4a3 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
  .debug_abbrev  0x000004a3      0x120 src/a2d.o
  .debug_abbrev  0x000005c3      0x106 src/buffer.o
  .debug_abbrev  0x000006c9      0x32d src/ff.o
- .debug_abbrev  0x000009f6      0x455 src/handlers.o
- .debug_abbrev  0x00000e4b      0x1bd src/lcd.o
- .debug_abbrev  0x00001008      0x243 src/main.o
- .debug_abbrev  0x0000124b      0x38b src/MD_MIDIFile.o
- .debug_abbrev  0x000015d6      0x164 src/MD_MIDIHelper.o
- .debug_abbrev  0x0000173a      0x2f8 src/MD_MIDITrack.o
- .debug_abbrev  0x00001a32      0x1e8 src/midi.o
- .debug_abbrev  0x00001c1a      0x21a src/mmc.o
- .debug_abbrev  0x00001e34      0x117 src/spi.o
- .debug_abbrev  0x00001f4b      0x28c src/SRAMDriver.o
- .debug_abbrev  0x000021d7      0x20e src/timer.o
- .debug_abbrev  0x000023e5      0x27d src/uart.o
+ .debug_abbrev  0x000009f6      0x42a src/handlers.o
+ .debug_abbrev  0x00000e20      0x1bd src/lcd.o
+ .debug_abbrev  0x00000fdd      0x254 src/main.o
+ .debug_abbrev  0x00001231      0x38b src/MD_MIDIFile.o
+ .debug_abbrev  0x000015bc      0x164 src/MD_MIDIHelper.o
+ .debug_abbrev  0x00001720      0x2f8 src/MD_MIDITrack.o
+ .debug_abbrev  0x00001a18      0x1e8 src/midi.o
+ .debug_abbrev  0x00001c00      0x21a src/mmc.o
+ .debug_abbrev  0x00001e1a      0x117 src/spi.o
+ .debug_abbrev  0x00001f31      0x28c src/SRAMDriver.o
+ .debug_abbrev  0x000021bd      0x20e src/timer.o
+ .debug_abbrev  0x000023cb      0x27d src/uart.o
+ .debug_abbrev  0x00002648       0x14 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
 
-.debug_line     0x00000000     0x618b
+.debug_line     0x00000000     0x631d
  *(.debug_line .debug_line.* .debug_line_end)
  .debug_line    0x00000000      0x115 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
  .debug_line    0x00000115      0x1f6 src/a2d.o
  .debug_line    0x0000030b      0x21f src/buffer.o
  .debug_line    0x0000052a     0x227d src/ff.o
- .debug_line    0x000027a7      0x701 src/handlers.o
- .debug_line    0x00002ea8      0x53b src/lcd.o
- .debug_line    0x000033e3      0x447 src/main.o
- .debug_line    0x0000382a      0x648 src/MD_MIDIFile.o
- .debug_line    0x00003e72      0x130 src/MD_MIDIHelper.o
- .debug_line    0x00003fa2      0x502 src/MD_MIDITrack.o
- .debug_line    0x000044a4      0x347 src/midi.o
- .debug_line    0x000047eb      0x847 src/mmc.o
- .debug_line    0x00005032      0x17f src/spi.o
- .debug_line    0x000051b1      0x6d1 src/SRAMDriver.o
- .debug_line    0x00005882      0x5bd src/timer.o
- .debug_line    0x00005e3f      0x34c src/uart.o
+ .debug_line    0x000027a7      0x807 src/handlers.o
+ .debug_line    0x00002fae      0x53b src/lcd.o
+ .debug_line    0x000034e9      0x428 src/main.o
+ .debug_line    0x00003911      0x648 src/MD_MIDIFile.o
+ .debug_line    0x00003f59      0x130 src/MD_MIDIHelper.o
+ .debug_line    0x00004089      0x502 src/MD_MIDITrack.o
+ .debug_line    0x0000458b      0x347 src/midi.o
+ .debug_line    0x000048d2      0x847 src/mmc.o
+ .debug_line    0x00005119      0x17f src/spi.o
+ .debug_line    0x00005298      0x6d1 src/SRAMDriver.o
+ .debug_line    0x00005969      0x5bd src/timer.o
+ .debug_line    0x00005f26      0x34c src/uart.o
+ .debug_line    0x00006272       0xab C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5\libatmega32.a(eerd_block.o)
 
-.debug_frame    0x00000000     0x2194
+.debug_frame    0x00000000     0x21bc
  *(.debug_frame)
  .debug_frame   0x00000000       0xc4 src/a2d.o
  .debug_frame   0x000000c4       0x8c src/buffer.o
  .debug_frame   0x00000150      0xa34 src/ff.o
- .debug_frame   0x00000b84      0x288 src/handlers.o
- .debug_frame   0x00000e0c      0x168 src/lcd.o
- .debug_frame   0x00000f74       0x38 src/main.o
- .debug_frame   0x00000fac      0x2ac src/MD_MIDIFile.o
- .debug_frame   0x00001258       0x9c src/MD_MIDIHelper.o
- .debug_frame   0x000012f4      0x184 src/MD_MIDITrack.o
- .debug_frame   0x00001478      0x138 src/midi.o
- .debug_frame   0x000015b0      0x1b8 src/mmc.o
- .debug_frame   0x00001768       0x64 src/spi.o
- .debug_frame   0x000017cc      0x344 src/SRAMDriver.o
- .debug_frame   0x00001b10      0x49c src/timer.o
- .debug_frame   0x00001fac      0x1e8 src/uart.o
+ .debug_frame   0x00000b84      0x2b0 src/handlers.o
+ .debug_frame   0x00000e34      0x168 src/lcd.o
+ .debug_frame   0x00000f9c       0x38 src/main.o
+ .debug_frame   0x00000fd4      0x2ac src/MD_MIDIFile.o
+ .debug_frame   0x00001280       0x9c src/MD_MIDIHelper.o
+ .debug_frame   0x0000131c      0x184 src/MD_MIDITrack.o
+ .debug_frame   0x000014a0      0x138 src/midi.o
+ .debug_frame   0x000015d8      0x1b8 src/mmc.o
+ .debug_frame   0x00001790       0x64 src/spi.o
+ .debug_frame   0x000017f4      0x344 src/SRAMDriver.o
+ .debug_frame   0x00001b38      0x49c src/timer.o
+ .debug_frame   0x00001fd4      0x1e8 src/uart.o
 
-.debug_str      0x00000000     0x1abe
+.debug_str      0x00000000     0x1adc
  *(.debug_str)
  .debug_str     0x00000000      0x196 C:/Program Files (x86)/Atmel/Studio/7.0/Packs/atmel/ATmega_DFP/1.2.209/gcc/dev/atmega32/avr5/crtatmega32.o
  .debug_str     0x00000196      0x1fb src/a2d.o
@@ -1511,48 +1533,48 @@ END GROUP
                                 0x267 (size before relaxing)
  .debug_str     0x00000460      0x51e src/ff.o
                                 0x6e3 (size before relaxing)
- .debug_str     0x0000097e      0x479 src/handlers.o
-                                0x8fd (size before relaxing)
- .debug_str     0x00000df7      0x116 src/lcd.o
+ .debug_str     0x0000097e      0x4aa src/handlers.o
+                                0x936 (size before relaxing)
+ .debug_str     0x00000e28      0x116 src/lcd.o
                                 0x2d4 (size before relaxing)
- .debug_str     0x00000f0d      0x1cf src/main.o
-                                0x8de (size before relaxing)
- .debug_str     0x000010dc      0x181 src/MD_MIDIFile.o
+ .debug_str     0x00000f3e      0x1b9 src/main.o
+                                0x8d4 (size before relaxing)
+ .debug_str     0x000010f7      0x181 src/MD_MIDIFile.o
                                 0x714 (size before relaxing)
- .debug_str     0x0000125d       0x22 src/MD_MIDIHelper.o
+ .debug_str     0x00001278       0x22 src/MD_MIDIHelper.o
                                 0x3b4 (size before relaxing)
- .debug_str     0x0000127f       0x64 src/MD_MIDITrack.o
+ .debug_str     0x0000129a       0x64 src/MD_MIDITrack.o
                                 0x637 (size before relaxing)
- .debug_str     0x000012e3       0xb8 src/midi.o
+ .debug_str     0x000012fe       0xb8 src/midi.o
                                 0x317 (size before relaxing)
- .debug_str     0x0000139b       0xa1 src/mmc.o
+ .debug_str     0x000013b6       0xa1 src/mmc.o
                                 0x2d2 (size before relaxing)
- .debug_str     0x0000143c       0x54 src/spi.o
+ .debug_str     0x00001457       0x54 src/spi.o
                                 0x1e0 (size before relaxing)
- .debug_str     0x00001490      0x229 src/SRAMDriver.o
+ .debug_str     0x000014ab      0x22c src/SRAMDriver.o
                                 0x430 (size before relaxing)
- .debug_str     0x000016b9      0x2d0 src/timer.o
+ .debug_str     0x000016d7      0x2d0 src/timer.o
                                 0x488 (size before relaxing)
- .debug_str     0x00001989      0x135 src/uart.o
+ .debug_str     0x000019a7      0x135 src/uart.o
                                 0x3b4 (size before relaxing)
 
-.debug_loc      0x00000000     0xc65b
+.debug_loc      0x00000000     0xc716
  *(.debug_loc)
  .debug_loc     0x00000000       0xe1 src/a2d.o
  .debug_loc     0x000000e1      0x210 src/buffer.o
  .debug_loc     0x000002f1     0x66c1 src/ff.o
- .debug_loc     0x000069b2      0xab3 src/handlers.o
- .debug_loc     0x00007465      0x688 src/lcd.o
- .debug_loc     0x00007aed      0x2e2 src/main.o
- .debug_loc     0x00007dcf      0xe3d src/MD_MIDIFile.o
- .debug_loc     0x00008c0c      0x2c6 src/MD_MIDIHelper.o
- .debug_loc     0x00008ed2      0x744 src/MD_MIDITrack.o
- .debug_loc     0x00009616      0x3ed src/midi.o
- .debug_loc     0x00009a03      0xce7 src/mmc.o
- .debug_loc     0x0000a6ea       0xb8 src/spi.o
- .debug_loc     0x0000a7a2     0x10dd src/SRAMDriver.o
- .debug_loc     0x0000b87f      0x90f src/timer.o
- .debug_loc     0x0000c18e      0x4cd src/uart.o
+ .debug_loc     0x000069b2      0xb4d src/handlers.o
+ .debug_loc     0x000074ff      0x688 src/lcd.o
+ .debug_loc     0x00007b87      0x303 src/main.o
+ .debug_loc     0x00007e8a      0xe3d src/MD_MIDIFile.o
+ .debug_loc     0x00008cc7      0x2c6 src/MD_MIDIHelper.o
+ .debug_loc     0x00008f8d      0x744 src/MD_MIDITrack.o
+ .debug_loc     0x000096d1      0x3ed src/midi.o
+ .debug_loc     0x00009abe      0xce7 src/mmc.o
+ .debug_loc     0x0000a7a5       0xb8 src/spi.o
+ .debug_loc     0x0000a85d     0x10dd src/SRAMDriver.o
+ .debug_loc     0x0000b93a      0x90f src/timer.o
+ .debug_loc     0x0000c249      0x4cd src/uart.o
 
 .debug_macinfo
  *(.debug_macinfo)
@@ -1572,23 +1594,23 @@ END GROUP
 .debug_pubtypes
  *(.debug_pubtypes)
 
-.debug_ranges   0x00000000      0x8a8
+.debug_ranges   0x00000000      0x8b8
  *(.debug_ranges)
  .debug_ranges  0x00000000       0x58 src/a2d.o
  .debug_ranges  0x00000058       0x40 src/buffer.o
  .debug_ranges  0x00000098      0x1f8 src/ff.o
- .debug_ranges  0x00000290       0xa8 src/handlers.o
- .debug_ranges  0x00000338       0x70 src/lcd.o
- .debug_ranges  0x000003a8       0x28 src/main.o
- .debug_ranges  0x000003d0       0xe0 src/MD_MIDIFile.o
- .debug_ranges  0x000004b0       0x18 src/MD_MIDIHelper.o
- .debug_ranges  0x000004c8       0x50 src/MD_MIDITrack.o
- .debug_ranges  0x00000518       0x70 src/midi.o
- .debug_ranges  0x00000588       0x70 src/mmc.o
- .debug_ranges  0x000005f8       0x28 src/spi.o
- .debug_ranges  0x00000620       0xe0 src/SRAMDriver.o
- .debug_ranges  0x00000700      0x120 src/timer.o
- .debug_ranges  0x00000820       0x88 src/uart.o
+ .debug_ranges  0x00000290       0xb8 src/handlers.o
+ .debug_ranges  0x00000348       0x70 src/lcd.o
+ .debug_ranges  0x000003b8       0x28 src/main.o
+ .debug_ranges  0x000003e0       0xe0 src/MD_MIDIFile.o
+ .debug_ranges  0x000004c0       0x18 src/MD_MIDIHelper.o
+ .debug_ranges  0x000004d8       0x50 src/MD_MIDITrack.o
+ .debug_ranges  0x00000528       0x70 src/midi.o
+ .debug_ranges  0x00000598       0x70 src/mmc.o
+ .debug_ranges  0x00000608       0x28 src/spi.o
+ .debug_ranges  0x00000630       0xe0 src/SRAMDriver.o
+ .debug_ranges  0x00000710      0x120 src/timer.o
+ .debug_ranges  0x00000830       0x88 src/uart.o
 
 .debug_macro
  *(.debug_macro)

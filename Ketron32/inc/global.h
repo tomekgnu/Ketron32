@@ -76,6 +76,11 @@
 #define JOY_W_DDR	DDRA
 #define JOY_T_DDR	DDRA
 
+#define SD_DETECT_PIN	PIND
+#define SD_DETECT_PORT	PORTD
+#define SD_DETECT_DDR	DDRD
+#define SD_DETECT		PD7
+
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
@@ -85,7 +90,7 @@ struct sndfamily{
 	char name[50];
 };
 
-typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,JOY_UP,JOY_RIGHT,JOY_DOWN,JOY_LEFT,JOY_PRESS,POT}  INPUT;
+typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,JOY_UP,JOY_RIGHT,JOY_DOWN,JOY_LEFT,JOY_PRESS,SD,POT}  INPUT;
 	
 uint32_t getMicros();
 uint32_t getMillis();

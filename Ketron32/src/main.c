@@ -4,6 +4,7 @@
  * Created: 15.07.2019 22:39:18
  * Author : Tomek
  */ 
+#define __MAIN__
 
 #include <avr/io.h>
 #include <stdlib.h>
@@ -11,6 +12,7 @@
 #include <util/delay.h>
 #include <stdio.h>
 #include <string.h>
+#include <avr/eeprom.h>
 #include "global.h"
 #include "SRAMDriver.h"
 #include "uart.h"
@@ -25,13 +27,16 @@
 #include "diskio.h"
 #include "a2d.h"
 #include "MD_MIDIFile.h"
+#include "lcdstrings.h"
+
 
 #define MIDI_FILE	0
 #define SOUND_FILE	1
+FATFS Fatfs;
 
 int main(void)
 {
-    FATFS Fatfs;
+    
 	FIL soundFile,midiFile;
 	FILINFO finf;
 	FRESULT res;
@@ -44,7 +49,7 @@ int main(void)
 	unsigned char numOfItems = 0;
     unsigned char currentMode = SOUND_FAMILY,currentAction = NONE;
 	BOOL endRecording = TRUE;
-	unsigned char inputs[10];
+	unsigned char inputs[11];
 	
 	INPUT input = NONE;
     struct sndfamily fam;
@@ -80,13 +85,9 @@ int main(void)
 	
 	lcdGotoXY(0,0);		
 		
-	if(f_mount(0,&Fatfs) != FR_OK)
-		lcdPrintData("Mount failed",12);
-	else
-		lcdPrintData("Mount OK",8);
-	lcdGotoXY(0,1);
-	if(checkSRAM() == TRUE)
-		lcdPrintData("SRAM OK",7);		
+	checkSD(inputs[SD]);
+	//if(checkSRAM() == TRUE)
+		//lcdPrintData("SRAM OK",7);		
 	/*
 	res = disk_initialize(0);		
 	if((res = f_open(&file,"Piano.fam",FA_READ)) != FR_OK)
@@ -102,7 +103,7 @@ int main(void)
 	readInputs(inputs);	
 	
 	while(1){						
-			if((input = readInputs(inputs)) >= BUTTON0 && input <= JOY_PRESS){	
+			if((input = readInputs(inputs)) >= BUTTON0 && input <= SD){	
 				lcdClear();
 				if(input >= BUTTON0 && input <= BUTTON3){
 					currentMode = input;
@@ -113,7 +114,9 @@ int main(void)
 				else if(input >= JOY_UP && input <= JOY_PRESS){
 					currentAction = input;
 				}
-				switch(input){					
+				switch(input){						
+					case SD:	checkSD(inputs[SD]);
+								break; 			
 					case BUTTON0:	// select sound family file						
 							createFileList(files,".FAM",&numOfItems);
 							handleFileList(currentMode,currentAction,listIndex,numOfItems,files);					

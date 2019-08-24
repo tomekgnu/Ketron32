@@ -5,6 +5,7 @@
  *  Author: Tomek
  */ 
 #include <avr/io.h>
+#include <avr/eeprom.h>
 #include <stdint.h>
 #include <string.h>
 #include <util/delay.h>
@@ -19,7 +20,9 @@
 #include "ff.h"
 #include "a2d.h"
 #include "timer.h"
+#include "lcdstrings.h"
 
+extern FATFS Fatfs;
 extern cBuffer uartRxBuffer;
 extern volatile unsigned char adcValue;
 char indstr[17];
@@ -27,9 +30,7 @@ char indstr[17];
 volatile unsigned long timer0_overflow_count = 0;
 volatile unsigned long timer0_millis = 0;
 static unsigned char timer0_fract = 0;
-
-
-
+static char lcdstr[16];
 
 void rx_handler(unsigned char byte){
 	
@@ -121,39 +122,46 @@ void setInputs(){
 	sbi(JOY_W_PORT,JOY_E);
 	sbi(JOY_T_PORT,JOY_T);
 	
+	// SD chip detect: input, pull-up
+	cbi(SD_DETECT_DDR,SD_DETECT);
+	sbi(SD_DETECT_PORT,SD_DETECT);
 }
 
-INPUT readInputs(unsigned char *but_new){
-	static unsigned char adc_new = 0;
-	static unsigned char adc_old = 0;
-	static unsigned char but_old[10] = {0,0,0,0,0,0,0,0,0,0};
+INPUT readInputs(unsigned char *inp_new){
+	static unsigned char inp_old[11] = {0,0,0,0,0,0,0,0,0,0,0};
 	
 	INPUT i;
 	
-	but_new[POT] = a2dConvert8bit(ADC_CH_ADC0);
+	inp_new[POT] = a2dConvert8bit(ADC_CH_ADC0);
 	// read buttons
-	but_new[BUTTON0] = !(PINB & (1 << SW0));
-	but_new[BUTTON1] = !(PINB & (1 << SW1));
-	but_new[BUTTON2] = !(PINB & (1 << SW2));
-	but_new[BUTTON3] = !(PINB & (1 << SW3));
+	inp_new[BUTTON0] = !(PINB & (1 << SW0));
+	inp_new[BUTTON1] = !(PINB & (1 << SW1));
+	inp_new[BUTTON2] = !(PINB & (1 << SW2));
+	inp_new[BUTTON3] = !(PINB & (1 << SW3));
 	
 	// read joystick
-	but_new[JOY_UP] = !(JOY_N_PIN & (1 << JOY_N));
-	but_new[JOY_RIGHT] = !(JOY_E_PIN & (1 << JOY_E));
-	but_new[JOY_DOWN] = !(JOY_S_PIN & (1 << JOY_S));
-	but_new[JOY_LEFT] = !(JOY_W_PIN & (1 << JOY_W));
-	but_new[JOY_PRESS] = !(JOY_T_PIN & (1 << JOY_T));	
+	inp_new[JOY_UP] = !(JOY_N_PIN & (1 << JOY_N));
+	inp_new[JOY_RIGHT] = !(JOY_E_PIN & (1 << JOY_E));
+	inp_new[JOY_DOWN] = !(JOY_S_PIN & (1 << JOY_S));
+	inp_new[JOY_LEFT] = !(JOY_W_PIN & (1 << JOY_W));
+	inp_new[JOY_PRESS] = !(JOY_T_PIN & (1 << JOY_T));	
+	inp_new[SD] = !(SD_DETECT_PIN & (1 << SD_DETECT));
+	
+	if(inp_new[SD] != inp_old[SD]){
+		inp_old[SD] = inp_new[SD];
+		return SD;
+	}
 	
 	for(i = BUTTON0; i < POT; i++){
-		if(but_new[i] != but_old[i]){
-			but_old[i] = but_new[i];
-			if(but_new[i] == 1)
+		if(inp_new[i] != inp_old[i]){
+			inp_old[i] = inp_new[i];
+			if(inp_new[i] == 1)
 				return i;			
 		}	
 	}
 	
-	if(but_new[POT] != but_old[POT]){
-		but_old[POT] = but_new[POT];
+	if(inp_new[POT] != inp_old[POT]){
+		inp_old[POT] = inp_new[POT];
 		return POT;
 	}
 	
@@ -249,7 +257,7 @@ unsigned char setMidiFile(struct MD_MIDIFile *mf, char *name){
 
 unsigned char midiRecord(int action){
 	itoa((int)action,indstr,10);
-	lcdPrintData("Midi rec ",9);
+	lcdPrintData("Midi rec.",9);
 	lcdGotoXY(0,1);
 	lcdPrintData(indstr,strlen(indstr));
 	return 0;
@@ -257,7 +265,7 @@ unsigned char midiRecord(int action){
 
 unsigned char soundSelect(int action){
 	itoa((int)action,indstr,10);
-	lcdPrintData("Sound sel",9);
+	lcdPrintData("Sound select",12);
 	lcdGotoXY(0,1);
 	lcdPrintData(indstr,strlen(indstr));
 	return 0;
@@ -271,6 +279,34 @@ unsigned char myFunction(int action){
 	lcdPrintData(indstr,strlen(indstr));
 	return 0;
 	
+}
+
+char * getLCDString(unsigned char offset,unsigned char len){
+	unsigned char i;
+	memset(lcdstr,0,16);
+	eeprom_read_block(lcdstr,offset,len);
+	return lcdstr;
+}
+
+void checkSD(unsigned char input){
+	lcdGotoXY(0,0);
+	
+	if(input == 1){
+		lcdPrintData(getLCDString(SD_REM,SD_REM_LEN),SD_REM_LEN);
+		lcdGotoXY(0,1);
+		if(f_mount(0,NULL) != FR_OK)
+			lcdPrintData(getLCDString(UNM_NO,UNM_NO_LEN),UNM_NO_LEN);
+		else
+			lcdPrintData(getLCDString(UNM_OK,UNM_OK_LEN),UNM_OK_LEN);
+	}
+	else{
+		lcdPrintData(getLCDString(SD_INS,SD_INS_LEN),SD_INS_LEN);
+		lcdGotoXY(0,1);
+		if(f_mount(0,&Fatfs) != FR_OK)
+			lcdPrintData(getLCDString(MNT_NO,MNT_NO_LEN),MNT_NO_LEN);
+		else
+			lcdPrintData(getLCDString(MNT_OK,MNT_OK_LEN),MNT_OK_LEN);
+	}
 }
 
 FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles)
@@ -352,7 +388,7 @@ void handleSoundList(FIL *file,unsigned char index,unsigned char number,struct s
 	char *ch[2] = {"*"," "};
 	lcdGotoXY(0,0);	
 	if(number == 0){
-		lcdPrintData("No sounds",9);
+		lcdPrintData(getLCDString(NO_SND,NO_SND_LEN),NO_SND_LEN);
 		return;
 	}	
 	f_lseek(file,tmp * sizeof(struct sndfamily));
@@ -379,7 +415,7 @@ void handleFileList(unsigned char currentMode,unsigned char currentAction,unsign
 	
 	lcdGotoXY(0,0);
 	if(number == 0){
-		lcdPrintData("No files",8);
+		lcdPrintData(getLCDString(NO_SND,NO_SND_LEN),NO_SND_LEN);
 		return;
 	}
 	
