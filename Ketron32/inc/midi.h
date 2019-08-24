@@ -40,14 +40,13 @@
 
 #define MIDI_BAUD_RATE			31250
 
-struct midiStruct{
+struct midi_time_event{
+	midi_event event;
 	unsigned long delta;
-	unsigned char size;
-	unsigned char midiEvent[3];	
 };
 	
 unsigned char * getMidiEvent();
-struct midiStruct * getMidiStruct(unsigned long dt);
+struct midi_time_event * getMidiStruct(unsigned long dt);
 BOOL readMidiMessage(unsigned char c,unsigned char *len);
 void sendMidiMessage(unsigned char num);
 void sendMidiBuffer(unsigned char *buf,unsigned char num);

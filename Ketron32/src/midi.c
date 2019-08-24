@@ -19,7 +19,7 @@ unsigned char midiState;
 // value 0-2 of where to write the next input byte 
 unsigned char midiReadIndex;
 unsigned char midiBytesToIgnore;
-struct midiStruct midiSt;
+struct midi_time_event work_event;
 BOOL noteEvent = FALSE;
 
 unsigned char playVolume,fileVolume;
@@ -60,13 +60,13 @@ void midiInit(){
 }
 
 unsigned char * getMidiEvent(){
-	return midiSt.midiEvent;
+	return work_event.event.data;
 }
 
-struct midiStruct * getMidiStruct(unsigned long dt){
-	midiSt.size = midiReadIndex;
-	midiSt.delta = dt;
-	return &midiSt;
+struct midi_time_event * getMidiStruct(unsigned long dt){
+	work_event.event.size = midiReadIndex;
+	work_event.delta = dt;
+	return &work_event;
 }
 
 BOOL readMidiMessage(unsigned char byte,unsigned char *len){
@@ -97,18 +97,18 @@ BOOL readMidiMessage(unsigned char byte,unsigned char *len){
                   midiClockFunc();
                } else {*/
             	 *len = 1;
-            	 midiSt.midiEvent[0] = byte;
+            	 work_event.event.data[0] = byte;
             	 noteEvent = FALSE;
                  return TRUE;
             } else if(tmp == 0){
             	if(noteEvent == TRUE) {
-            		midiSt.midiEvent[1] = byte;
+            		work_event.event.data[1] = byte;
             		midiReadIndex = 2;
             	}
             }
 			else {
 				   // save first byte of event, position pointer..
-				   midiSt.midiEvent[0] = byte;
+				   work_event.event.data[0] = byte;
 				   midiReadIndex = 1;
 				}
             midiState = MIDI_READING;
@@ -119,12 +119,12 @@ BOOL readMidiMessage(unsigned char byte,unsigned char *len){
         		noteEvent = FALSE;
         		return FALSE;
         	}
-        	midiSt.midiEvent[midiReadIndex++] = byte;
-            if (midiReadIndex == commandLen(midiSt.midiEvent[0]&0xF0))
+        	work_event.event.data[midiReadIndex++] = byte;
+            if (midiReadIndex == commandLen(work_event.event.data[0]&0xF0))
             {
                midiState = MIDI_WAIT;
                *len = midiReadIndex;
-               if(midiSt.midiEvent[0] & (MIDI_NOTE_ON|MIDI_NOTE_OFF)){
+               if(work_event.event.data[0] & (MIDI_NOTE_ON|MIDI_NOTE_OFF)){
             	   noteEvent = TRUE;
                }
                return TRUE;
@@ -144,7 +144,7 @@ BOOL readMidiMessage(unsigned char byte,unsigned char *len){
 void sendMidiMessage(unsigned char num){
 	unsigned char i;
 	for(i = 0; i < num; i++)
-		uartSendByte(midiSt.midiEvent[i]);
+		uartSendByte(work_event.event.data[i]);
 	
 }
 
@@ -155,12 +155,12 @@ void sendMidiBuffer(unsigned char *buf,unsigned char num){
 }
 
 void sendProgramChange(unsigned char bank,unsigned char program){
-	midiSt.midiEvent[0] = MIDI_CONTROL_CHANGE;
-	midiSt.midiEvent[1] = 0;			// MSB
-	midiSt.midiEvent[2] = bank;		// LSB
+	work_event.event.data[0] = MIDI_CONTROL_CHANGE;
+	work_event.event.data[1] = 0;			// MSB
+	work_event.event.data[2] = bank;		// LSB
 	sendMidiMessage(3);
-	midiSt.midiEvent[0] = MIDI_PROGRAM_CHANGE;
-	midiSt.midiEvent[1] = program;
+	work_event.event.data[0] = MIDI_PROGRAM_CHANGE;
+	work_event.event.data[1] = program;
 	sendMidiMessage(2);
 }
 
@@ -206,11 +206,12 @@ void sysexFun(sysex_event *ev){
 	
 }
 
-void midiFun(midi_event *ev){	
+void midiFun(midi_event *ev){
+	/*	
 	if((ev->data[0] & 0xF0) == 0x90)
 		ev->data[2] = fileVolume;
 	else if((ev->data[0] & 0xF0) == 0x80)
-		ev->data[2] = 0;
+		ev->data[2] = 0; */
 	ev->data[0] = ev->data[0] | ev->channel;
 	sendMidiBuffer(ev->data,ev->size);
 }

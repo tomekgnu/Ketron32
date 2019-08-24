@@ -36,7 +36,7 @@ int main(void)
 	FILINFO finf;
 	FRESULT res;
 	FRESULT openFiles[2] = {FR_INVALID_OBJECT,FR_INVALID_OBJECT};
-	struct midiStruct mst;
+	struct midi_time_event mtevent;
 	char (*files)[MAX_FNAME];
     unsigned char byteValue = 0;
 	unsigned char listIndex = 0;
@@ -137,8 +137,8 @@ int main(void)
 							}
 							else{
 								SRAM_seekRead(0,SEEK_SET);
-								readSRAM(((unsigned char *)&mst),sizeof(struct midiStruct));
-								microseconds = getMicros() + mst.delta;
+								readSRAM(((unsigned char *)&mtevent),sizeof(struct midi_time_event));
+								microseconds = getMicros() + mtevent.delta;
 								lcdPrintData("Stopped",7);
 								f_write(&soundFile,"\x01\xFF\x2F\x00",4,&numOfBytes);
 								f_close(&soundFile);
@@ -218,9 +218,9 @@ int main(void)
 			}
 			else if(currentMode == MIDI_REC && endRecording == TRUE){
 				if(getMicros() > microseconds){
-					sendMidiBuffer(mst.midiEvent,mst.size);
-					readSRAM(((unsigned char *)&mst),sizeof(struct midiStruct));
-					microseconds = getMicros() + mst.delta; 
+					sendMidiBuffer(mtevent.event.data,mtevent.event.size);
+					readSRAM(((unsigned char *)&mtevent),sizeof(struct midi_time_event));
+					microseconds = getMicros() + mtevent.delta; 
 				}
 			}
 			if(!uartReceiveBufferIsEmpty()){
@@ -230,7 +230,7 @@ int main(void)
 					if(currentMode == MIDI_REC && endRecording == FALSE){
 						delta = (getMicros() - microseconds);
 						//WriteVarLen(&soundFile,delta);
-						writeSRAM((unsigned char *)getMidiStruct(delta),sizeof(struct midiStruct));						
+						writeSRAM((unsigned char *)getMidiStruct(delta),sizeof(struct midi_time_event));						
 						microseconds = getMicros();
 						//f_write(&soundFile,getMidiEvent(),(UINT)numOfBytes,((UINT *)&numOfItems));
 					}				
