@@ -37,11 +37,10 @@ FATFS Fatfs;
 int main(void)
 {
     
-	FIL soundFile,midiFile;
-	FILINFO finf;
-	FRESULT res;
-	FRESULT openFiles[2] = {FR_INVALID_OBJECT,FR_INVALID_OBJECT};
+	FIL open_files[2];
+	FRESULT file_status[2] = {FR_INVALID_OBJECT,FR_INVALID_OBJECT};
 	struct midi_time_event mtevent;
+	struct sound_file_ptr snd_ptr = {0};
 	char (*files)[MAX_FNAME];
     unsigned char byteValue = 0;
 	unsigned char listIndex = 0;
@@ -52,11 +51,12 @@ int main(void)
 	unsigned char inputs[11];
 	
 	INPUT input = NONE;
-    struct sndfamily fam;
+    struct family_entry fam;
+	struct sound_entry snd;
 	struct MD_MIDIFile mf;
       
-	unsigned long microseconds;
-	unsigned long delta;
+	unsigned long microseconds = 0;
+	unsigned long delta = 0;
 	//DDRA |= (1 << PA1);		// remove
 	files = malloc(MAX_FNAME * MAX_FILES);
 	
@@ -99,7 +99,7 @@ int main(void)
 	*/
 	
 	
-	midiFileVolume(inputs[POT] / 2);
+	midiPlayVolume(inputs[POT]);
 	readInputs(inputs);	
 	
 	while(1){						
@@ -114,7 +114,9 @@ int main(void)
 				else if(input >= JOY_UP && input <= JOY_PRESS){
 					currentAction = input;
 				}
-				switch(input){						
+				switch(input){	
+					case NONE:	break;
+					case POT:	break;					
 					case SD:	checkSD(inputs[SD]);
 								break; 			
 					case BUTTON0:	// select sound family file						
@@ -132,61 +134,71 @@ int main(void)
 									
 							if(endRecording == FALSE){
 								SRAM_seekWrite(0,SEEK_SET);										
-								f_open(&soundFile,"SONG.MID",FA_WRITE | FA_CREATE_ALWAYS);
-								writeMidi(&soundFile);
+								f_open(&open_files[MIDI_FILE],"SONG.MID",FA_WRITE | FA_CREATE_ALWAYS);
+								writeMidi(&open_files[MIDI_FILE]);
 								lcdGotoXY(0,0);
-								lcdPrintData("Recording",9);
+								lcdPrintData(getLCDString(RECORD,RECORD_LEN),RECORD_LEN);
 								microseconds = getMicros();
 							}
 							else{
 								SRAM_seekRead(0,SEEK_SET);
 								readSRAM(((unsigned char *)&mtevent),sizeof(struct midi_time_event));
 								microseconds = getMicros() + mtevent.delta;
-								lcdPrintData("Stopped",7);
-								f_write(&soundFile,"\x01\xFF\x2F\x00",4,&numOfBytes);
-								f_close(&soundFile);
+								lcdPrintData(getLCDString(STOPPED,STOPPED_LEN),STOPPED_LEN);
+								f_write(&open_files[MIDI_FILE],"\x01\xFF\x2F\x00",4,(UINT *)&numOfBytes);
+								f_close(&open_files[MIDI_FILE]);
 										
 							} 
 							break;
-					case JOY_UP:	if(listIndex > 0) listIndex--;
+					case JOY_UP:	
+									if(listIndex > 0) listIndex--;
 									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY)	
 										handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
 									else if(currentMode == SOUND_SELECT){
-										handleSoundList(&soundFile,listIndex,numOfItems,&fam);
-										sendProgramChange(fam.bank,fam.prog);
+										scrollSoundList(&open_files[SOUND_FILE],JOY_UP,&fam,&snd,&snd_ptr);
+										sendProgramChange(snd.bank,snd.prog);
 									}
 									break;
-					case JOY_RIGHT:	break;
+					case JOY_RIGHT:	scrollSoundList(&open_files[SOUND_FILE],JOY_RIGHT, &fam,&snd,&snd_ptr);
+									sendProgramChange(snd.bank,snd.prog);
+									break;
 					case JOY_DOWN:	if(listIndex < (numOfItems - 1)) listIndex++;
 									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY) 
 										handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
 									else if(currentMode == SOUND_SELECT){
-										handleSoundList(&soundFile,listIndex,numOfItems,&fam);
-										sendProgramChange(fam.bank,fam.prog);
+										scrollSoundList(&open_files[SOUND_FILE],JOY_DOWN, &fam,&snd,&snd_ptr);
+										sendProgramChange(snd.bank,snd.prog);
 									}
 									break;
-					case JOY_LEFT:	break;
+					case JOY_LEFT:	scrollSoundList(&open_files[SOUND_FILE],JOY_LEFT,&fam,&snd,&snd_ptr);
+									sendProgramChange(snd.bank,snd.prog);
+									break;
 					case JOY_PRESS:	if(currentMode == MIDI_PLAY)										
 										setMidiFile(&mf,files[listIndex]);									
 									else if(currentMode == SOUND_FAMILY){
-										if(openFiles[SOUND_FILE] == FR_OK){
-											f_close(&soundFile);
-											openFiles[SOUND_FILE] = FR_INVALID_OBJECT;
+										if(file_status[SOUND_FILE] == FR_OK){
+											f_close(&open_files[SOUND_FILE]);
+											file_status[SOUND_FILE] = FR_INVALID_OBJECT;
 										}
-										openFiles[SOUND_FILE] = setSoundFile(&soundFile,&fam,files[listIndex]);	// f_open
-										createSoundList(&soundFile,&numOfItems);
-										handleSoundList(&soundFile,listIndex,numOfItems,&fam);
-										sendProgramChange(fam.bank,fam.prog);
+										memset(&snd_ptr,0,sizeof(struct sound_file_ptr));
+										// open selected file and get first family name and first sound of that family (fam/snd params)
+										file_status[SOUND_FILE] = setSoundFile(&open_files[SOUND_FILE],&fam,&snd,files[listIndex]);	// f_open
+										//createSoundList(&open_files[SOUND_FILE],&numOfItems);
+										lcdClear();
+										lcdPrintData(fam.name,strlen(fam.name));
+										lcdGotoXY(0,1);
+										lcdPrintData(snd.name,strlen(snd.name));
+										sendProgramChange(snd.bank,snd.prog);
 										currentMode = SOUND_SELECT;																				
 									}
 									else if(currentMode == SOUND_SELECT){
 										lcdClear();
 										lcdGotoXY(0,0);
-										lcdPrintData("Selected: ",10);
+										lcdPrintData(getLCDString(SELECTED,SELECTED_LEN),SELECTED_LEN);
 										lcdGotoXY(0,1);
 										lcdPrintData(fam.name,strlen(fam.name));
-										f_close(&soundFile);
-										openFiles[SOUND_FILE] = FR_INVALID_OBJECT;
+										f_close(&open_files[SOUND_FILE]);
+										file_status[SOUND_FILE] = FR_INVALID_OBJECT;
 									}
 									break;							
 				}
@@ -204,7 +216,7 @@ int main(void)
 				//_delay_ms(250);
 			}
 			else if(input == POT){
-				midiFileVolume(inputs[POT] / 2);
+				midiPlayVolume(inputs[POT]);
 			}
 			
 			
@@ -215,7 +227,7 @@ int main(void)
 				}
 				else{
 					closeMIDIFile(&mf);
-					lcdPrintData("Finished",8);
+					lcdPrintData(getLCDString(FINISHED,FINISHED_LEN),FINISHED_LEN);
 					currentAction = NONE;
 				}
 			}
@@ -245,7 +257,7 @@ int main(void)
 			// << process events
 		}
 		
-		f_close(&soundFile); 
+		f_close(&open_files[SOUND_FILE]); 
 		f_mount(0,NULL);
 		free(files);		
 }

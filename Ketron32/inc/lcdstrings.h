@@ -21,6 +21,10 @@
 #define SND_SEL		95	// Sound select
 #define OPN_OK		107	// Open OK
 #define NO_SND		114	// No sounds
+#define RECORD		123	// Recording
+#define STOPPED		132	// Stopped
+#define FINISHED	139	// Finished
+#define SELECTED	147	// Selected
 
 /* string lengths in eeprom */
 #define SD_INS_LEN		16	// SD card inserted
@@ -34,5 +38,9 @@
 #define SND_SEL_LEN		12	// Sound select
 #define OPN_OK_LEN		7	// Open OK
 #define NO_SND_LEN		9	// No sounds
+#define RECORD_LEN		9	// Recording
+#define STOPPED_LEN		7	// Stopped
+#define FINISHED_LEN	8	// Finished
+#define SELECTED_LEN	8	// Selected
 
 #endif /* LCDSTRINGS_H_ */

@@ -986,8 +986,8 @@ struct MD_MIDIFile{
   uint16_t tickClock(struct MD_MIDIFile *m);   ///< work out the number of ticks since the last event check
 
   int loadTrack(struct MD_MFTrack *t,uint8_t trackId, struct MD_MIDIFile *mf);
-
-
+  void closeMIDIFile(struct MD_MIDIFile *m);
+  void closeTrack(struct MD_MFTrack *t);
   
 
 #endif /* _MDMIDIFILE_H */

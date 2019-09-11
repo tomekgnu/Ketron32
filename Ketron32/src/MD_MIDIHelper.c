@@ -50,10 +50,10 @@ uint32_t readVarLen(FIL *f)
   uint32_t  value = 0;
   uint8_t      c;
   UINT d;
-  FRESULT res;
+
   do
   {
-    res = f_read(f,&c,1,&d);
+    f_read(f,&c,1,&d);	
     value = (value << 7) + (c & 0x7f);
   }  while (c & 0x80);
   

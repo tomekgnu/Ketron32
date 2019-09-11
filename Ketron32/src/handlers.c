@@ -13,7 +13,6 @@
 #include "buffer.h"
 #include "global.h"
 #include "handlers.h"
-#include "avr/io.h"
 #include "midi.h"
 #include "avrlibtypes.h"
 #include "lcd.h"
@@ -240,7 +239,7 @@ unsigned char setMidiFile(struct MD_MIDIFile *mf, char *name){
 	setFilename(mf,name);	
 	
 	if(loadMIDIFile(mf) != -1){
-		lcdPrintData("Open failed",11);
+		lcdPrintData(getLCDString(OPN_NO,OPN_NO_LEN),OPN_NO_LEN);
 		_delay_ms(500);
 		return 1;
 	}	
@@ -255,36 +254,9 @@ unsigned char setMidiFile(struct MD_MIDIFile *mf, char *name){
 }
 
 
-unsigned char midiRecord(int action){
-	itoa((int)action,indstr,10);
-	lcdPrintData("Midi rec.",9);
-	lcdGotoXY(0,1);
-	lcdPrintData(indstr,strlen(indstr));
-	return 0;
-}
-
-unsigned char soundSelect(int action){
-	itoa((int)action,indstr,10);
-	lcdPrintData("Sound select",12);
-	lcdGotoXY(0,1);
-	lcdPrintData(indstr,strlen(indstr));
-	return 0;
-	
-}
-
-unsigned char myFunction(int action){
-	itoa((int)action,indstr,10);
-	lcdPrintData("My funct ",9);
-	lcdGotoXY(0,1);
-	lcdPrintData(indstr,strlen(indstr));
-	return 0;
-	
-}
-
-char * getLCDString(unsigned char offset,unsigned char len){
-	unsigned char i;
+char * getLCDString(unsigned short offset,unsigned char len){
 	memset(lcdstr,0,16);
-	eeprom_read_block(lcdstr,offset,len);
+	eeprom_read_block(lcdstr,(char *)offset,(size_t)len);
 	return lcdstr;
 }
 
@@ -314,10 +286,8 @@ FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles
 	TCHAR path[9];
 	FRESULT res;
 	FILINFO fno;
-	FIL fil;
 	DIR dir;
-	UINT i;		
-	
+		
 	char *fn;   /* This function is assuming non-Unicode cfg. */
 	#if _USE_LFN
 	static char lfn[_MAX_LFN + 1];
@@ -362,51 +332,74 @@ FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles
 	return res;
 }
 
-FRESULT setSoundFile(FIL *file,struct sndfamily *snd,unsigned char *filename){
+FRESULT setSoundFile(FIL *file, struct family_entry *fam,struct sound_entry *snd,char *filename){
 	FRESULT res;
 	UINT numOfBytes;
 	
 	if((res = f_open(file,filename,FA_READ)) != FR_OK)
-		lcdPrintData("Open failed",11);
+		lcdPrintData(getLCDString(OPN_NO,OPN_NO_LEN),OPN_NO_LEN);
 	else{
-		lcdPrintData("Open OK",7);
+		lcdPrintData(getLCDString(OPN_OK,OPN_OK_LEN),OPN_OK_LEN);
 		f_lseek(file,0);
-		f_read(file,snd,sizeof(struct sndfamily),&numOfBytes);				
+		f_read(file,fam,sizeof(struct family_entry),&numOfBytes);
+		f_read(file,snd,sizeof(struct sound_entry),&numOfBytes);				
 	}
 	
+	f_lseek(file,0);
+	return res;
 }
 
 void createSoundList(FIL *file,unsigned char *num){
-	(*num) = file->fsize / sizeof(struct sndfamily); 
+	(*num) = file->fsize / sizeof(struct sound_entry); 
 }
 
-void handleSoundList(FIL *file,unsigned char index,unsigned char number,struct sndfamily *snd){
-	FRESULT res;
+void scrollSoundList(FIL *file,INPUT joy, struct family_entry *fam, struct sound_entry *snd,struct sound_file_ptr *sptr){	
 	UINT numOfBytes;
-	struct sndfamily fam[2];
-	unsigned char tmp = index - (index % 2);
-	char *ch[2] = {"*"," "};
-	lcdGotoXY(0,0);	
-	if(number == 0){
-		lcdPrintData(getLCDString(NO_SND,NO_SND_LEN),NO_SND_LEN);
-		return;
-	}	
-	f_lseek(file,tmp * sizeof(struct sndfamily));
-	f_read(file,&fam[0],sizeof(struct sndfamily),&numOfBytes);
-	lcdGotoXY(1,0);
-	lcdPrintData(fam[0].name,strlen(fam[0].name));
-	lcdGotoXY(0,0);
-	lcdPrintData(ch[index % 2],1);
-	if(f_eof(file))
-		return;
+	sptr->next_family = sptr->current_family + sizeof(struct family_entry) + fam->current_sounds * sizeof(struct sound_entry);
+	if(fam->previous_sounds != 0)
+	sptr->previous_family = sptr->current_family - fam->previous_sounds * sizeof(struct sound_entry) - sizeof(struct family_entry);
+	lcdClear();	
+	switch(joy){
+		case BUTTON0:
+		case BUTTON1:
+		case BUTTON2:
+		case BUTTON3:
+		case SD:
+		case POT:
+				break;
+		case JOY_PRESS:
+				break;
+		case NONE: break;
+		case JOY_LEFT:
+			sptr->current_sound = 0;
+			f_lseek(file,sptr->previous_family);
+			break;
+		case JOY_RIGHT:
+			sptr->current_sound = 0;
+			if(sptr->next_family < file->fsize)
+				f_lseek(file,sptr->next_family);
+			break;
+		case JOY_UP:
+			if(sptr->current_sound > 0)
+				sptr->current_sound--;
+			break;
+		case JOY_DOWN:
+			if(sptr->current_sound < (fam->current_sounds - 1))
+				sptr->current_sound++;
+			break;
+
+	}
+
+		sptr->current_family = f_tell(file);
+		f_read(file,fam,sizeof(struct family_entry),&numOfBytes);		
+		lcdGotoXY(0,0);
+		lcdPrintData(fam->name,strlen(fam->name));
+		f_lseek(file,sptr->current_family + sizeof(struct family_entry) + sptr->current_sound * sizeof(struct sound_entry));
+		f_read(file,snd,sizeof(struct sound_entry),&numOfBytes);
+		f_lseek(file,sptr->current_family);
+		lcdGotoXY(0,1);
+		lcdPrintData(snd->name,strlen(snd->name));
 		
-	lcdGotoXY(1,1);
-	f_read(file,&fam[1],sizeof(struct sndfamily),&numOfBytes);
-	lcdPrintData(fam[1].name,strlen(fam[1].name));
-	lcdGotoXY(0,1);
-	lcdPrintData(ch[(index + 1) % 2],1);	
-	
-	(*snd) = fam[index % 2];
 }
 
 void handleFileList(unsigned char currentMode,unsigned char currentAction,unsigned char index,unsigned char number,char (*list)[MAX_FNAME]){
@@ -432,7 +425,7 @@ void handleFileList(unsigned char currentMode,unsigned char currentAction,unsign
 }
 
 void writeMidi(FIL *file){
-	UINT br;
+	//UINT br;
 	/*
 	f_write(file,"MThd",4,&br);		// marker
 	f_write(file,"\x00\x00\x00\x06",4,&br);	// length of data
@@ -474,4 +467,8 @@ void WriteVarLen(FIL *file,unsigned long value)
 		else
 			return;
 	}
+}
+
+void closeFile(FRESULT *fr){
+	
 }

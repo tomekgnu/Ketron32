@@ -54,7 +54,7 @@ void sendProgramChange(unsigned char bank,unsigned char program);
 void midiFileVolume(unsigned char vol);
 void midiPlayVolume(unsigned char vol);
 void midiFun(midi_event *ev);
-void metaFun(meta_event *ev);
+void metaFun(const meta_event *ev);
 void sysexFun(sysex_event *ev);
 void midiInit(void);
 void midiPoll(unsigned char byte);

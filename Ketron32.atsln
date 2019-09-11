@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "Ketron32", "Ketron32\Ketron32.cproj", "{DCE6C7E3-EE26-4D79-826B-08594B9AD897}"
 EndProject
-Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "MD_MIDIFile_Play_LCD", "..\..\Arduino\libraries\MD_MIDIFile-master\examples\MD_MIDIFile_Play_LCD\ArduinoSketch1\MD_MIDIFile_Play_LCD\MD_MIDIFile_Play_LCD.cppproj", "{DE600E34-1475-476D-B426-62353A3350F9}"
-EndProject
 Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "ArduinoCore", "..\..\Arduino\libraries\MD_MIDIFile-master\examples\MD_MIDIFile_Play_LCD\ArduinoSketch1\ArduinoCore\ArduinoCore.cppproj", "{4921324A-9693-4F2F-8719-0D492FFD18C9}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Debug|AVR.Build.0 = Debug|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.ActiveCfg = Release|AVR
 		{DCE6C7E3-EE26-4D79-826B-08594B9AD897}.Release|AVR.Build.0 = Release|AVR
-		{DE600E34-1475-476D-B426-62353A3350F9}.Debug|AVR.ActiveCfg = Debug|AVR
-		{DE600E34-1475-476D-B426-62353A3350F9}.Debug|AVR.Build.0 = Debug|AVR
-		{DE600E34-1475-476D-B426-62353A3350F9}.Release|AVR.ActiveCfg = Release|AVR
-		{DE600E34-1475-476D-B426-62353A3350F9}.Release|AVR.Build.0 = Release|AVR
 		{4921324A-9693-4F2F-8719-0D492FFD18C9}.Debug|AVR.ActiveCfg = Debug|AVR
 		{4921324A-9693-4F2F-8719-0D492FFD18C9}.Debug|AVR.Build.0 = Debug|AVR
 		{4921324A-9693-4F2F-8719-0D492FFD18C9}.Release|AVR.ActiveCfg = Release|AVR

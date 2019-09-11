@@ -15,7 +15,7 @@ src/timer.d src/timer.o: ../src/timer.c \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\lib\gcc\avr\5.4.0\include\stddef.h \
  c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\sleep.h \
  ../inc/global.h ../inc/avrlibdefs.h ../inc/avrlibtypes.h ../inc/ff.h \
- ../inc/ffconf.h ../inc/timer.h ../inc/global.h ../inc/rprintf.h
+ ../inc/ffconf.h ../inc/timer.h ../inc/global.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
 
@@ -60,5 +60,3 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../inc/timer.h:
 
 ../inc/global.h:
-
-../inc/rprintf.h:

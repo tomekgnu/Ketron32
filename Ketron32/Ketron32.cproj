@@ -140,6 +140,7 @@
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
         <avrgcc.compiler.optimization.OtherDebuggingFlags>-g</avrgcc.compiler.optimization.OtherDebuggingFlags>
         <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+        <avrgcc.compiler.warnings.WarningsAsErrors>True</avrgcc.compiler.warnings.WarningsAsErrors>
         <avrgcc.linker.libraries.Libraries>
           <ListValues>
             <Value>libm</Value>
@@ -200,9 +201,6 @@
     <Compile Include="inc\midi.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="inc\rprintf.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="inc\spi.h">
       <SubType>compile</SubType>
     </Compile>
@@ -246,9 +244,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\mmc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\rprintf.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\spi.c">

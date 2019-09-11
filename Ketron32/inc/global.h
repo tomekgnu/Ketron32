@@ -84,10 +84,23 @@
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
-struct sndfamily{
-	unsigned char bank;
-	unsigned char prog;
-	char name[50];
+struct family_entry{
+	uint32_t previous_sounds;
+	uint32_t current_sounds;
+	char name[16];
+};
+
+struct sound_entry{
+	uint8_t bank;
+	uint8_t prog;
+	char name[16];
+};
+
+struct sound_file_ptr{
+	DWORD previous_family;
+	DWORD current_family;
+	DWORD next_family;
+	DWORD current_sound;
 };
 
 typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,JOY_UP,JOY_RIGHT,JOY_DOWN,JOY_LEFT,JOY_PRESS,SD,POT}  INPUT;

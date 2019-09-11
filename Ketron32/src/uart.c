@@ -34,8 +34,8 @@ unsigned short uartRxOverflow;		///< receive overflow counter
 #ifndef UART_BUFFERS_EXTERNAL_RAM
 	// using internal ram,
 	// automatically allocate space in ram for each buffer
-	static char uartRxData[UART_RX_BUFFER_SIZE];
-	static char uartTxData[UART_TX_BUFFER_SIZE];
+	static unsigned char uartRxData[UART_RX_BUFFER_SIZE];
+	static unsigned char uartTxData[UART_TX_BUFFER_SIZE];
 #endif
 
 typedef void (*voidFuncPtru08)(unsigned char);

@@ -5,8 +5,8 @@
 #include "string.h"
 #include "stdint.h"
 
-uint8_t *sramDDR[SRAMChips] = {&DDRD,&DDRD,&DDRC,&DDRC};
-uint8_t *sramPORT[SRAMChips] = {&PORTD,&PORTD,&PORTC,&PORTC};
+volatile uint8_t *sramDDR[SRAMChips] = {&DDRD,&DDRD,&DDRC,&DDRC};
+volatile uint8_t *sramPORT[SRAMChips] = {&PORTD,&PORTD,&PORTC,&PORTC};
 uint8_t sramPins[SRAMChips] = {PD5,PD6,PC0,PC1};
 
 uint8_t SRAMBuf[SRAMPageSize];
@@ -101,7 +101,7 @@ void incrementWriter(int size){
 	currentSRAM = currentWriter.currentSram;
 }
 
-writeSRAM(unsigned char *buf,unsigned int size){
+void writeSRAM(unsigned char *buf,unsigned int size){
 	unsigned int unaligned = currentWriter.currentByte.value % SRAMPageSize; // byte between start and end of page
 	unsigned int remainder = (unaligned > 0?(SRAMPageSize - unaligned):0); // bytes remaining to end of page
 	if(size == 0)

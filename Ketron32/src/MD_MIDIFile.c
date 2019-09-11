@@ -302,7 +302,7 @@ int loadMIDIFile(struct MD_MIDIFile *m)
   // header chunk = "MThd" + <header_length:4> + <format:2> + <num_tracks:2> + <time_division:2>
     
 
-    f_read(&m->_fd,h,MTHD_HDR_SIZE,&dat32);
+    f_read(&m->_fd,h,MTHD_HDR_SIZE,(UINT *)&dat32);
 	
     h[MTHD_HDR_SIZE] = '\0';
 

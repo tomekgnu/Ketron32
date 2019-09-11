@@ -142,7 +142,9 @@ BOOL readMidiMessage(unsigned char byte,unsigned char *len){
 }
 
 void sendMidiMessage(unsigned char num){
-	unsigned char i;
+	unsigned char i;	
+	if((work_event.event.data[0] & 0xF0) == 0x90)
+		work_event.event.data[2] *= ( (float)playVolume / 255.00);	 
 	for(i = 0; i < num; i++)
 		uartSendByte(work_event.event.data[i]);
 	
@@ -151,7 +153,7 @@ void sendMidiMessage(unsigned char num){
 void sendMidiBuffer(unsigned char *buf,unsigned char num){
 	unsigned char i;
 	for(i = 0; i < num; i++)
-	uartSendByte(buf[i]);
+		uartSendByte(buf[i]);
 }
 
 void sendProgramChange(unsigned char bank,unsigned char program){
@@ -198,7 +200,7 @@ unsigned char commandLen(unsigned char cmd)
 	return 0;
 }
 
-void metaFun(meta_event *ev){
+void metaFun(const meta_event *ev){
 	
 }
 
@@ -207,11 +209,8 @@ void sysexFun(sysex_event *ev){
 }
 
 void midiFun(midi_event *ev){
-	/*	
 	if((ev->data[0] & 0xF0) == 0x90)
-		ev->data[2] = fileVolume;
-	else if((ev->data[0] & 0xF0) == 0x80)
-		ev->data[2] = 0; */
+		ev->data[2] *= ( 127.00 / (float)(playVolume + 1));	 	
 	ev->data[0] = ev->data[0] | ev->channel;
 	sendMidiBuffer(ev->data,ev->size);
 }

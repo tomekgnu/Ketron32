@@ -23,7 +23,7 @@
 #include "global.h"
 #include "timer.h"
 
-#include "rprintf.h"
+//#include "rprintf.h"
 
 // Program ROM constants
 // the prescale division values stored in order of timer control register index

@@ -119,7 +119,7 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
 // process the event from the physical file
 {
   uint8_t eType;
-  uint32_t eLen, mLen;
+  uint32_t mLen;
   UINT bRead;
   // now we have to process this event
   f_read(&mf->_fd,&eType,1,&bRead);
@@ -441,7 +441,7 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
 int loadTrack(struct MD_MFTrack *t,uint8_t trackId, struct MD_MIDIFile *mf)
 {
   uint32_t  dat32;
-  uint16_t  dat16;
+  //uint16_t  dat16;
 
   // save the trackid for use later
   t->_trackId = t->_mev.track = trackId;
@@ -451,7 +451,7 @@ int loadTrack(struct MD_MFTrack *t,uint8_t trackId, struct MD_MIDIFile *mf)
   {
     char    h[MTRK_HDR_SIZE+1]; // Header characters + nul
   
-    f_read(&mf->_fd,h,MTRK_HDR_SIZE,&dat32);
+    f_read(&mf->_fd,h,MTRK_HDR_SIZE,(UINT *)&dat32);
     h[MTRK_HDR_SIZE] = '\0';
 
     if (strcmp(h, MTRK_HDR) != 0)
