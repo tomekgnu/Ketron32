@@ -96,12 +96,11 @@ struct sound_entry{
 	char name[16];
 };
 
-struct sound_file_ptr{
-	DWORD previous_family;
-	DWORD current_family;
-	DWORD next_family;
-	DWORD current_sound;
+struct file_entry_lookup{
+	unsigned char current_items;
+	unsigned char current_index;	
 };
+
 
 typedef enum{NONE=-1,BUTTON0,BUTTON1,BUTTON2,BUTTON3,JOY_UP,JOY_RIGHT,JOY_DOWN,JOY_LEFT,JOY_PRESS,SD,POT}  INPUT;
 	
@@ -120,7 +119,7 @@ void addMillis();
 #define FRACT_MAX (1000 >> 3)
 
 #define SOUND_FAMILY	BUTTON0
-#define SOUND_SELECT	BUTTON1
+#define SOUND_SELECTED	BUTTON1
 #define MIDI_PLAY	BUTTON2
 #define MIDI_REC	BUTTON3
 

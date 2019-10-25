@@ -90,6 +90,7 @@ void closeMIDIFile(struct MD_MIDIFile *m)
 
   setFilename(m,"");
   f_close(&m->_fd);
+  m->_fileOpen = FALSE;
 }
 
 void setTempoAdjust(struct MD_MIDIFile *m, int16_t t)

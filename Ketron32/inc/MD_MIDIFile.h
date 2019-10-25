@@ -491,7 +491,7 @@ struct MD_MIDIFile{
 	uint8_t   _timeSignature[2];    ///< time signature [0] = numerator, [1] = denominator
 
 	// file handling
-	uint8_t   _selectSD;          ///< SDFat select line
+	BOOL   _fileOpen;          ///< SDFat select line
 	
 	struct MD_MFTrack   _track[MIDI_MAX_TRACKS]; ///< the track data for this file
 };

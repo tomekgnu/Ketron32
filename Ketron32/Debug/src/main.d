@@ -23,9 +23,10 @@ src/main.d src/main.o: ../src/main.c \
  ../inc/global.h ../inc/avrlibdefs.h ../inc/avrlibtypes.h ../inc/ff.h \
  ../inc/ffconf.h ../inc/SRAMDriver.h ../inc/uart.h ../inc/global.h \
  ../inc/buffer.h ../inc/midi.h ../inc/MD_MIDIFile.h ../inc/handlers.h \
- ../inc/buffer.h ../inc/avrlibdefs.h ../inc/lcd.h ../inc/lcdconf.h \
+ ../inc/SNDFile.h ../inc/lcd.h ../inc/lcdconf.h ../inc/lcdstrings.h \
+ ../inc/handlers.h ../inc/buffer.h ../inc/avrlibdefs.h ../inc/lcd.h \
  ../inc/spi.h ../inc/ff.h ../inc/timer.h ../inc/diskio.h ../inc/a2d.h \
- ../inc/MD_MIDIFile.h ../inc/lcdstrings.h
+ ../inc/MD_MIDIFile.h ../inc/SNDFile.h ../inc/lcdstrings.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
 
@@ -93,13 +94,21 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 
 ../inc/handlers.h:
 
+../inc/SNDFile.h:
+
+../inc/lcd.h:
+
+../inc/lcdconf.h:
+
+../inc/lcdstrings.h:
+
+../inc/handlers.h:
+
 ../inc/buffer.h:
 
 ../inc/avrlibdefs.h:
 
 ../inc/lcd.h:
-
-../inc/lcdconf.h:
 
 ../inc/spi.h:
 
@@ -112,5 +121,7 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../inc/a2d.h:
 
 ../inc/MD_MIDIFile.h:
+
+../inc/SNDFile.h:
 
 ../inc/lcdstrings.h:

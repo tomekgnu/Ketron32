@@ -27,6 +27,7 @@
 #include "diskio.h"
 #include "a2d.h"
 #include "MD_MIDIFile.h"
+#include "SNDFile.h"
 #include "lcdstrings.h"
 
 
@@ -38,15 +39,14 @@ int main(void)
 {
     
 	FIL open_files[2];
-	FRESULT file_status[2] = {FR_INVALID_OBJECT,FR_INVALID_OBJECT};
+	
 	struct midi_time_event mtevent;
-	struct sound_file_ptr snd_ptr = {0};
-	char (*files)[MAX_FNAME];
+	struct SNDFile sf = {0};
+	struct file_entry_lookup file_entry = {0};
+	char (*file_list)[MAX_FNAME];
     unsigned char byteValue = 0;
-	unsigned char listIndex = 0;
-    unsigned char numOfBytes = 0;
-	unsigned char numOfItems = 0;
-    unsigned char currentMode = SOUND_FAMILY,currentAction = NONE;
+	unsigned char numOfBytes = 0;
+	unsigned char currentMode = SOUND_FAMILY,currentAction = NONE;
 	BOOL endRecording = TRUE;
 	unsigned char inputs[11];
 	
@@ -58,7 +58,7 @@ int main(void)
 	unsigned long microseconds = 0;
 	unsigned long delta = 0;
 	//DDRA |= (1 << PA1);		// remove
-	files = malloc(MAX_FNAME * MAX_FILES);
+	file_list = malloc(MAX_FNAME * MAX_FILES);
 	
 	configTimers();	
 	lcdInit();	
@@ -108,8 +108,8 @@ int main(void)
 				if(input >= BUTTON0 && input <= BUTTON3){
 					currentMode = input;
 					currentAction = NONE;
-					listIndex = 0;
-					numOfItems = 0;					
+					file_entry.current_index = 0;
+					file_entry.current_items = 0;					
 				}
 				else if(input >= JOY_UP && input <= JOY_PRESS){
 					currentAction = input;
@@ -120,14 +120,14 @@ int main(void)
 					case SD:	checkSD(inputs[SD]);
 								break; 			
 					case BUTTON0:	// select sound family file						
-							createFileList(files,".FAM",&numOfItems);
-							handleFileList(currentMode,currentAction,listIndex,numOfItems,files);					
+							createFileList(file_list,".FAM",&file_entry);
+							handleFileList(currentMode,currentAction,&file_entry,file_list);					
 							break;						
 					case BUTTON1:	//select sound from file						
 							break;						
 					case BUTTON2:	// play midi
-							createFileList(files,".MID",&numOfItems);
-							handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
+							createFileList(file_list,".MID",&file_entry);
+							handleFileList(currentMode,currentAction,&file_entry,file_list);
 							break;
 					case BUTTON3:	// record midi
 							endRecording = !endRecording;
@@ -151,56 +151,60 @@ int main(void)
 							} 
 							break;
 					case JOY_UP:	
-									if(listIndex > 0) listIndex--;
-									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY)	
-										handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
-									else if(currentMode == SOUND_SELECT){
-										scrollSoundList(&open_files[SOUND_FILE],JOY_UP,&fam,&snd,&snd_ptr);
-										sendProgramChange(snd.bank,snd.prog);
-									}
-									break;
-					case JOY_RIGHT:	scrollSoundList(&open_files[SOUND_FILE],JOY_RIGHT, &fam,&snd,&snd_ptr);
+								if(file_entry.current_index > 0) file_entry.current_index--;
+								if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY)	
+									handleFileList(currentMode,currentAction,&file_entry,file_list);
+								else if(currentMode == SOUND_SELECTED){
+									scrollSoundList(&sf,JOY_UP,&fam,&snd);
 									sendProgramChange(snd.bank,snd.prog);
-									break;
-					case JOY_DOWN:	if(listIndex < (numOfItems - 1)) listIndex++;
-									if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY) 
-										handleFileList(currentMode,currentAction,listIndex,numOfItems,files);
-									else if(currentMode == SOUND_SELECT){
-										scrollSoundList(&open_files[SOUND_FILE],JOY_DOWN, &fam,&snd,&snd_ptr);
-										sendProgramChange(snd.bank,snd.prog);
-									}
-									break;
-					case JOY_LEFT:	scrollSoundList(&open_files[SOUND_FILE],JOY_LEFT,&fam,&snd,&snd_ptr);
+								}
+								break;
+					case JOY_RIGHT:	
+								scrollSoundList(&sf,JOY_RIGHT, &fam,&snd);
+								sendProgramChange(snd.bank,snd.prog);
+								break;
+					case JOY_DOWN:	
+								if(file_entry.current_index < (file_entry.current_items - 1)) file_entry.current_index++;
+								if(currentMode == MIDI_PLAY || currentMode == SOUND_FAMILY) 
+									handleFileList(currentMode,currentAction,&file_entry,file_list);
+								else if(currentMode == SOUND_SELECTED){
+									scrollSoundList(&sf,JOY_DOWN, &fam,&snd);
 									sendProgramChange(snd.bank,snd.prog);
-									break;
-					case JOY_PRESS:	if(currentMode == MIDI_PLAY)										
-										setMidiFile(&mf,files[listIndex]);									
-									else if(currentMode == SOUND_FAMILY){
-										if(file_status[SOUND_FILE] == FR_OK){
-											f_close(&open_files[SOUND_FILE]);
-											file_status[SOUND_FILE] = FR_INVALID_OBJECT;
-										}
-										memset(&snd_ptr,0,sizeof(struct sound_file_ptr));
-										// open selected file and get first family name and first sound of that family (fam/snd params)
-										file_status[SOUND_FILE] = setSoundFile(&open_files[SOUND_FILE],&fam,&snd,files[listIndex]);	// f_open
-										//createSoundList(&open_files[SOUND_FILE],&numOfItems);
-										lcdClear();
-										lcdPrintData(fam.name,strlen(fam.name));
-										lcdGotoXY(0,1);
-										lcdPrintData(snd.name,strlen(snd.name));
-										sendProgramChange(snd.bank,snd.prog);
-										currentMode = SOUND_SELECT;																				
-									}
-									else if(currentMode == SOUND_SELECT){
-										lcdClear();
-										lcdGotoXY(0,0);
-										lcdPrintData(getLCDString(SELECTED,SELECTED_LEN),SELECTED_LEN);
-										lcdGotoXY(0,1);
-										lcdPrintData(fam.name,strlen(fam.name));
-										f_close(&open_files[SOUND_FILE]);
-										file_status[SOUND_FILE] = FR_INVALID_OBJECT;
-									}
-									break;							
+								}
+								break;
+					case JOY_LEFT:	
+								scrollSoundList(&sf,JOY_LEFT,&fam,&snd);
+								sendProgramChange(snd.bank,snd.prog);
+								break;
+					case JOY_PRESS:	
+							if(currentMode == MIDI_PLAY)										
+								setMidiFile(&mf,file_list[file_entry.current_index]);									
+							else if(currentMode == SOUND_FAMILY){
+								if(sf._fileOpen == TRUE){
+									closeSNDFile(&sf);
+								}
+								memset(&sf,0,sizeof(struct SNDFile));
+								// open selected file and get first family name and first sound of that family (fam/snd params)
+								// f_open
+								setSNDFile(&sf,file_list[file_entry.current_index],&fam,&snd);
+								//createSoundList(&open_files[SOUND_FILE],&numOfItems);
+								lcdClear();
+								lcdPrintData(fam.name,strlen(fam.name));
+								lcdGotoXY(0,1);
+								lcdPrintData(snd.name,strlen(snd.name));
+								sendProgramChange(snd.bank,snd.prog);
+								currentMode = SOUND_SELECTED;																				
+							}
+							else if(currentMode == SOUND_SELECTED){
+								lcdClear();
+								lcdGotoXY(0,0);
+								lcdPrintData(getLCDString(SELECTED,SELECTED_LEN),SELECTED_LEN);
+								lcdGotoXY(0,1);
+								lcdPrintData(fam.name,strlen(fam.name));
+								closeSNDFile(&sf);
+										
+							}
+							break;							
 				}
 				
 					
@@ -259,5 +263,5 @@ int main(void)
 		
 		f_close(&open_files[SOUND_FILE]); 
 		f_mount(0,NULL);
-		free(files);		
+		free(file_list);		
 }

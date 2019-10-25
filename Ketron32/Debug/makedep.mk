@@ -24,6 +24,8 @@ src\midi.c
 
 src\mmc.c
 
+src\SNDFile.c
+
 src\spi.c
 
 src\SRAMDriver.c

@@ -50,6 +50,7 @@ C_SRCS +=  \
 ../src/MD_MIDITrack.c \
 ../src/midi.c \
 ../src/mmc.c \
+../src/SNDFile.c \
 ../src/spi.c \
 ../src/SRAMDriver.c \
 ../src/timer.c \
@@ -74,6 +75,7 @@ src/MD_MIDIHelper.o \
 src/MD_MIDITrack.o \
 src/midi.o \
 src/mmc.o \
+src/SNDFile.o \
 src/spi.o \
 src/SRAMDriver.o \
 src/timer.o \
@@ -91,6 +93,7 @@ src/MD_MIDIHelper.o \
 src/MD_MIDITrack.o \
 src/midi.o \
 src/mmc.o \
+src/SNDFile.o \
 src/spi.o \
 src/SRAMDriver.o \
 src/timer.o \
@@ -108,6 +111,7 @@ src/MD_MIDIHelper.d \
 src/MD_MIDITrack.d \
 src/midi.d \
 src/mmc.d \
+src/SNDFile.d \
 src/spi.d \
 src/SRAMDriver.d \
 src/timer.d \
@@ -125,6 +129,7 @@ src/MD_MIDIHelper.d \
 src/MD_MIDITrack.d \
 src/midi.d \
 src/mmc.d \
+src/SNDFile.d \
 src/spi.d \
 src/SRAMDriver.d \
 src/timer.d \
@@ -215,6 +220,13 @@ src/midi.o: ../src/midi.c
 	
 
 src/mmc.o: ../src/mmc.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DF_CPU=16000000UL -D__PROG_TYPES_COMPAT__  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\include" -I"../inc"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g -Wall -Werror -mmcu=atmega32 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega32" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/SNDFile.o: ../src/SNDFile.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files (x86)\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -funsigned-char -funsigned-bitfields -DDEBUG -DF_CPU=16000000UL -D__PROG_TYPES_COMPAT__  -I"C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\include" -I"../inc"  -O1 -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g -Wall -Werror -mmcu=atmega32 -B "C:\Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega32" -c -std=gnu99 -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 

@@ -244,6 +244,7 @@ unsigned char setMidiFile(struct MD_MIDIFile *mf, char *name){
 		return 1;
 	}	
 	
+	mf->_fileOpen = TRUE;
 	mf->_paused = FALSE;
 	mf->_looping = FALSE;	
 	
@@ -281,7 +282,7 @@ void checkSD(unsigned char input){
 	}
 }
 
-FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles)
+FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,struct file_entry_lookup *filentry)
 {
 	TCHAR path[9];
 	FRESULT res;
@@ -314,12 +315,12 @@ FRESULT createFileList(char (*tab)[MAX_FNAME],char *type,unsigned char *numfiles
 				continue;			
 			if(strlen(fno.fname) >= MAX_FNAME)
 				continue;
-			memset(tab[*numfiles],0,MAX_FNAME);
+			memset(tab[filentry->current_items],0,MAX_FNAME);
 			if(strstr(fno.fname,type) != NULL || strstr(fno.fname,type) != NULL){
-				strncpy(tab[*numfiles],fn,strlen(fn));
-				(*numfiles)++;
+				strncpy(tab[filentry->current_items],fn,strlen(fn));
+				filentry->current_items++;
 			}
-			if((*numfiles) == MAX_FILES)
+			if(filentry->current_items == MAX_FILES)
 				break;
 			//res = f_write(&fil,fn,strlen(fn),&i);
 			//res = f_write(&fil,"\n",1,&i);	// newline
@@ -353,61 +354,14 @@ void createSoundList(FIL *file,unsigned char *num){
 	(*num) = file->fsize / sizeof(struct sound_entry); 
 }
 
-void scrollSoundList(FIL *file,INPUT joy, struct family_entry *fam, struct sound_entry *snd,struct sound_file_ptr *sptr){	
-	UINT numOfBytes;
-	sptr->next_family = sptr->current_family + sizeof(struct family_entry) + fam->current_sounds * sizeof(struct sound_entry);
-	if(fam->previous_sounds != 0)
-	sptr->previous_family = sptr->current_family - fam->previous_sounds * sizeof(struct sound_entry) - sizeof(struct family_entry);
-	lcdClear();	
-	switch(joy){
-		case BUTTON0:
-		case BUTTON1:
-		case BUTTON2:
-		case BUTTON3:
-		case SD:
-		case POT:
-				break;
-		case JOY_PRESS:
-				break;
-		case NONE: break;
-		case JOY_LEFT:
-			sptr->current_sound = 0;
-			f_lseek(file,sptr->previous_family);
-			break;
-		case JOY_RIGHT:
-			sptr->current_sound = 0;
-			if(sptr->next_family < file->fsize)
-				f_lseek(file,sptr->next_family);
-			break;
-		case JOY_UP:
-			if(sptr->current_sound > 0)
-				sptr->current_sound--;
-			break;
-		case JOY_DOWN:
-			if(sptr->current_sound < (fam->current_sounds - 1))
-				sptr->current_sound++;
-			break;
 
-	}
 
-		sptr->current_family = f_tell(file);
-		f_read(file,fam,sizeof(struct family_entry),&numOfBytes);		
-		lcdGotoXY(0,0);
-		lcdPrintData(fam->name,strlen(fam->name));
-		f_lseek(file,sptr->current_family + sizeof(struct family_entry) + sptr->current_sound * sizeof(struct sound_entry));
-		f_read(file,snd,sizeof(struct sound_entry),&numOfBytes);
-		f_lseek(file,sptr->current_family);
-		lcdGotoXY(0,1);
-		lcdPrintData(snd->name,strlen(snd->name));
-		
-}
-
-void handleFileList(unsigned char currentMode,unsigned char currentAction,unsigned char index,unsigned char number,char (*list)[MAX_FNAME]){
-	unsigned char tmp = index - (index % 2);
+void handleFileList(unsigned char currentMode,unsigned char currentAction,struct file_entry_lookup *filentry,char (*list)[MAX_FNAME]){
+	unsigned char tmp = filentry->current_index - (filentry->current_index % 2);
 	char *ch[2] = {"*"," "};
 	
 	lcdGotoXY(0,0);
-	if(number == 0){
+	if(filentry->current_items == 0){
 		lcdPrintData(getLCDString(NO_SND,NO_SND_LEN),NO_SND_LEN);
 		return;
 	}
@@ -415,12 +369,12 @@ void handleFileList(unsigned char currentMode,unsigned char currentAction,unsign
 	lcdGotoXY(1,0);
 	lcdPrintData(list[tmp],strlen(list[tmp]));
 	lcdGotoXY(0,0);
-	lcdPrintData(ch[index % 2],1);
-	if(index < number){
+	lcdPrintData(ch[filentry->current_index % 2],1);
+	if(filentry->current_index < filentry->current_items){
 		lcdGotoXY(1,1);
 		lcdPrintData(list[tmp + 1],strlen(list[tmp + 1]));
 		lcdGotoXY(0,1);
-		lcdPrintData(ch[(index + 1) % 2],1);
+		lcdPrintData(ch[(filentry->current_index + 1) % 2],1);
 	}
 }
 
