@@ -21,7 +21,7 @@ src/handlers.d src/handlers.o: ../src/handlers.c \
  ../inc/global.h ../inc/handlers.h ../inc/MD_MIDIFile.h ../inc/SNDFile.h \
  ../inc/lcd.h ../inc/lcdconf.h ../inc/lcdstrings.h ../inc/handlers.h \
  ../inc/midi.h ../inc/avrlibtypes.h ../inc/lcd.h ../inc/ff.h ../inc/a2d.h \
- ../inc/timer.h ../inc/lcdstrings.h
+ ../inc/timer.h ../inc/lcdstrings.h ../inc/diskio.h
 
 c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\include\avr\io.h:
 
@@ -102,3 +102,5 @@ c:\program\ files\ (x86)\atmel\studio\7.0\toolchain\avr8\avr8-gnu-toolchain\avr\
 ../inc/timer.h:
 
 ../inc/lcdstrings.h:
+
+../inc/diskio.h:

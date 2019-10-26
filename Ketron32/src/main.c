@@ -117,7 +117,8 @@ int main(void)
 				switch(input){	
 					case NONE:	break;
 					case POT:	break;					
-					case SD:	checkSD(inputs[SD]);
+					case SD:	delay_ms(1000);
+								checkSD(inputs[SD]);								
 								break; 			
 					case BUTTON0:	// select sound family file						
 							createFileList(file_list,".FAM",&file_entry);

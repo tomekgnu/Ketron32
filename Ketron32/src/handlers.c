@@ -20,6 +20,7 @@
 #include "a2d.h"
 #include "timer.h"
 #include "lcdstrings.h"
+#include "diskio.h"
 
 extern FATFS Fatfs;
 extern cBuffer uartRxBuffer;
@@ -277,8 +278,9 @@ void checkSD(unsigned char input){
 		lcdGotoXY(0,1);
 		if(f_mount(0,&Fatfs) != FR_OK)
 			lcdPrintData(getLCDString(MNT_NO,MNT_NO_LEN),MNT_NO_LEN);
-		else
-			lcdPrintData(getLCDString(MNT_OK,MNT_OK_LEN),MNT_OK_LEN);
+		else{
+			lcdPrintData(getLCDString(MNT_OK,MNT_OK_LEN),MNT_OK_LEN);			
+		}
 	}
 }
 
@@ -370,7 +372,7 @@ void handleFileList(unsigned char currentMode,unsigned char currentAction,struct
 	lcdPrintData(list[tmp],strlen(list[tmp]));
 	lcdGotoXY(0,0);
 	lcdPrintData(ch[filentry->current_index % 2],1);
-	if(filentry->current_index < filentry->current_items){
+	if(tmp < (filentry->current_items -1)){
 		lcdGotoXY(1,1);
 		lcdPrintData(list[tmp + 1],strlen(list[tmp + 1]));
 		lcdGotoXY(0,1);
