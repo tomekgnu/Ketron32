@@ -370,7 +370,7 @@ http://www.stephenhobley.com/blog/2011/03/14/the-last-darned-midi-interface-ill-
  MIDI messages are being transmitted through the serial port as the Serial.print() 
  functions are called to print information to the serial monitor.
  */
-#define SHOW_UNUSED_META  0
+#define SHOW_UNUSED_META  1
 
 /**
  \def MIDI_MAX_TRACKS

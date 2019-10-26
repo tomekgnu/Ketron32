@@ -209,10 +209,19 @@ void sysexFun(sysex_event *ev){
 }
 
 void midiFun(midi_event *ev){
-	if((ev->data[0] & 0xF0) == 0x90)
-		ev->data[2] *= ( 127.00 / (float)(playVolume + 1));	 	
-	ev->data[0] = ev->data[0] | ev->channel;
-	sendMidiBuffer(ev->data,ev->size);
+// 	 if ((pev->data[0] >= 0x80) && (pev->data[0] <= 0xe0))
+// 	 {
+// 		 Serial.write(pev->data[0] | pev->channel);
+// 		 Serial.write(&pev->data[1], pev->size-1);
+// 	 }
+// 	 else
+// 	 Serial.write(pev->data, pev->size);
+	if(ev->data[0] >= 0x80 && ev->data[0] <= 0xe0){
+		ev->data[0] = ev->data[0] | ev->channel;
+		sendMidiBuffer(ev->data,ev->size);	 	
+	}
+	else	
+		sendMidiBuffer(ev->data,ev->size);
 }
 
 void midiFileVolume(unsigned char vol){

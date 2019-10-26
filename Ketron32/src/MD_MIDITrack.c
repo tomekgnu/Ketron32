@@ -119,6 +119,7 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
 // process the event from the physical file
 {
   uint8_t eType;
+  uint8_t bVal;
   uint32_t mLen;
   UINT bRead;
   // now we have to process this event
@@ -179,7 +180,7 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
     t->_mev.data[1] = eType;
     for (uint8_t i = 2; i < t->_mev.size; i++)
     {
-      f_read(&mf->_fd,&t->_mev.data[1],1,&bRead);  // next byte
+      f_read(&mf->_fd,&t->_mev.data[i],1,&bRead);  // next byte
     } 
 
     DUMP("[MID+] Ch: ", _mev.channel);
@@ -239,8 +240,7 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
   case 0xff:  // meta_event = 0xFF + <meta_type:1> + <length:v> + <event_data_bytes>
   {
     meta_event mev;
-
-    //eType = 
+    
 	f_read(&mf->_fd,&eType,1,&bRead);
     mLen =  readVarLen(&mf->_fd);
 
@@ -248,16 +248,16 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
     mev.size = mLen;
     mev.type = eType;
 
-    DUMPX("[META] Type: 0x", eType);
-    DUMP("\tLen: ", mLen);
-    DUMPS("\t");
+    //DUMPX("[META] Type: 0x", eType);
+    //DUMP("\tLen: ", mLen);
+   // DUMPS("\t");
 
     switch (eType)
     {
       case 0x2f:  // End of track
       {
         t->_endOfTrack = TRUE;
-        DUMPS("END OF TRACK");
+        //DUMPS("END OF TRACK");
       }
       break;
 
@@ -271,9 +271,9 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
         mev.data[1] = (value >> 8) & 0xFF;
         mev.data[2] = value & 0xFF;
         
-        DUMP("SET TEMPO to ", getTickTime(mf));
-        DUMP(" us/tick or ", getTempo(mf));
-        DUMPS(" beats/min");
+        //DUMP("SET TEMPO to ", getTickTime(mf));
+        //DUMP(" us/tick or ", getTempo(mf));
+        //DUMPS(" beats/min");
       }
       break;
 
@@ -291,15 +291,15 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
         mev.data[2] = 0;
         mev.data[3] = 0;
 
-        DUMP("SET TIME SIGNATURE to ", getTimeSignature(mf) >> 8);
-        DUMP("/", getTimeSignature(mf) & 0xf);
+        //DUMP("SET TIME SIGNATURE to ", getTimeSignature(mf) >> 8);
+        //DUMP("/", getTimeSignature(mf) & 0xf);
       }
       break;
 
       case 0x59:  // Key Signature
       {
         int8_t sf,mi;
-		DUMPS("KEY SIGNATURE");
+		//DUMPS("KEY SIGNATURE");
         f_read(&mf->_fd,&sf,1,&bRead);
         f_read(&mf->_fd,&mi,1,&bRead);
         const char* aaa[] = {"Cb", "Gb", "Db", "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#"};
@@ -323,7 +323,7 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
           strcpy(mev.chars, "Err"); // error sf
 
         mev.size = strlen(mev.chars); // change META length
-        DUMP(" ", mev.chars);
+        //DUMP(" ", mev.chars);
       }
       break;
 
@@ -334,77 +334,77 @@ void parseEvent(struct MD_MIDIFile *mf,struct MD_MFTrack *t)
         mev.data[0] = (x >> 8) & 0xFF;
         mev.data[1] = x & 0xFF;
 
-        DUMP("SEQUENCE NUMBER ", mev.data[0]);
-        DUMP(" ", mev.data[1]);
+        //DUMP("SEQUENCE NUMBER ", mev.data[0]);
+        //DUMP(" ", mev.data[1]);
       }
       break;
 
       case 0x20:  // Channel Prefix
       mev.data[0] = readMultiByte(&mf->_fd, MB_BYTE);
-      DUMP("CHANNEL PREFIX ", mev.data[0]);
+      //DUMP("CHANNEL PREFIX ", mev.data[0]);
       break;
 
       case 0x21:  // Port Prefix
       mev.data[0] = readMultiByte(&mf->_fd, MB_BYTE);
-      DUMP("PORT PREFIX ", mev.data[0]);
+      //DUMP("PORT PREFIX ", mev.data[0]);
       break;
 
 #if SHOW_UNUSED_META
       case 0x01:  // Text
-      DUMPS("TEXT ");
+      //DUMPS("TEXT ");
       for (int i=0; i<mLen; i++)
-        DUMP("", (char)mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       break;
 
       case 0x02:  // Copyright Notice
-      DUMPS("COPYRIGHT ");
+      //DUMPS("COPYRIGHT ");
       for (uint8_t i=0; i<mLen; i++)
-        DUMP("", (char)mf->_fd.read());
+       f_read(&mf->_fd,&bVal,1,&bRead);
       break;
 
       case 0x03:  // Sequence or Track Name
-      DUMPS("SEQ/TRK NAME ");
+      //DUMPS("SEQ/TRK NAME ");
       for (uint8_t i=0; i<mLen; i++)
-        DUMP("", (char)mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       break;
 
       case 0x04:  // Instrument Name
-      DUMPS("INSTRUMENT ");
+      //DUMPS("INSTRUMENT ");
       for (uint8_t i=0; i<mLen; i++)
-        DUMP("", (char)mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       break;
 
       case 0x05:  // Lyric
-      DUMPS("LYRIC ");
+      //DUMPS("LYRIC ");
       for (uint8_t i=0; i<mLen; i++)
-        DUMP("", (char)mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       break;
 
       case 0x06:  // Marker
-      DUMPS("MARKER ");
+      //DUMPS("MARKER ");
       for (uint8_t i=0; i<mLen; i++)
-        DUMP("", (char)mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       break;
 
       case 0x07:  // Cue Point
-      DUMPS("CUE POINT ");
+      //DUMPS("CUE POINT ");
       for (uint8_t i=0; i<mLen; i++)
-        DUMP("", (char)mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       break;
 
       case 0x54:  // SMPTE Offset
-      DUMPS("SMPTE OFFSET");
+      //DUMPS("SMPTE OFFSET");
       for (uint8_t i=0; i<mLen; i++)
       {
-        DUMP(" ", mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       }
       break;
 
       case 0x7F:  // Sequencer Specific Metadata
-      DUMPS("SEQ SPECIFIC");
+      //DUMPS("SEQ SPECIFIC");
       for (uint8_t i=0; i<mLen; i++)
       {
-        DUMPX(" ", mf->_fd.read());
+        f_read(&mf->_fd,&bVal,1,&bRead);
       }
       break;
 #endif // SHOW_UNUSED_META
